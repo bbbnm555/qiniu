@@ -222,9 +222,68 @@ function HomePage() {
           />
         </div>
 
+        {transcript && (
+          <p
+            style={{
+              color: "var(--color-accent)",
+              fontSize: "0.9rem",
+              margin: 0,
+            }}
+          >
+            "{transcript}"
+          </p>
+        )}
         <p className={styles.hint}>
           按住 <kbd className={styles.key}>T</kbd> 键说话 · 松开停止
         </p>
+
+        {/* 调试：文本输入框 */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            const input = (e.target as HTMLFormElement).querySelector("input");
+            if (input?.value.trim()) {
+              handleVoiceResult(input.value.trim());
+              input.value = "";
+            }
+          }}
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            width: "100%",
+            maxWidth: 420,
+          }}
+        >
+          <input
+            type="text"
+            placeholder="或在此输入文字测试..."
+            style={{
+              flex: 1,
+              padding: "8px 14px",
+              borderRadius: "20px",
+              border: "1px solid var(--color-border-light)",
+              background: "var(--color-bg-surface)",
+              color: "var(--color-fg)",
+              fontSize: "0.85rem",
+              outline: "none",
+            }}
+          />
+          <button
+            type="submit"
+            style={{
+              padding: "8px 18px",
+              borderRadius: "20px",
+              border: "1px solid var(--color-accent)",
+              background: "rgba(212,168,83,0.1)",
+              color: "var(--color-accent)",
+              cursor: "pointer",
+              fontWeight: 500,
+              fontSize: "0.85rem",
+            }}
+          >
+            发送
+          </button>
+        </form>
 
         {!voiceSupported && (
           <p className={styles.unsupported}>⚠ 请使用 Chrome 或 Edge 浏览器</p>
