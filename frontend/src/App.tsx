@@ -6,7 +6,6 @@ import VoiceIndicator from "./components/ui/VoiceIndicator";
 import StatusBadge from "./components/ui/StatusBadge";
 import CameraPreview from "./components/ui/CameraPreview";
 import ConversationPanel from "./components/conversation/ConversationPanel";
-import { useAccessibility } from "./hooks/useAccessibility";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { useConnectionStore } from "./stores/useConnectionStore";
 import { useConversationStore } from "./stores/useConversationStore";
@@ -47,7 +46,6 @@ function HomePage() {
 
   useAudioOutput();
 
-  // 订阅 WS response.text + error
   useEffect(() => {
     const unsub = subscribe(WS_EVENTS.RESPONSE_TEXT, (payload) => {
       const data = payload as ResponseTextPayload;
@@ -97,19 +95,14 @@ function HomePage() {
     messages,
   ]);
 
-  // 语音识别 → 发送 user.query（自动中断上一个）
   const handleVoiceResult = useCallback(
     (text: string) => {
       setError(null);
-
-      // 如果正在处理，先取消上一个
       if (activeQueryId && isProcessing) {
         send(WS_EVENTS.QUERY_CANCEL, { query_id: activeQueryId });
       }
-
       const queryId = crypto.randomUUID();
       setActiveQueryId(queryId);
-
       addMessage({
         id: crypto.randomUUID(),
         role: "user",
@@ -117,7 +110,6 @@ function HomePage() {
         timestamp: Date.now(),
         queryId,
       });
-
       send(WS_EVENTS.USER_QUERY, { query_id: queryId, text });
       setIsProcessing(true);
     },
@@ -139,6 +131,36 @@ function HomePage() {
     start: startVoice,
     stop: stopVoice,
   } = useVoiceRecognition(handleVoiceResult);
+
+  // ---- 键盘控制：按住 T 录音，松开停止 ----
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "t" || e.key === "T") {
+        if (e.repeat) return; // 忽略重复触发
+        e.preventDefault();
+        if (!isListening && !isProcessing) {
+          startVoice();
+        }
+      }
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "t" || e.key === "T") {
+        e.preventDefault();
+        if (isListening) {
+          stopVoice();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [isListening, isProcessing, startVoice, stopVoice]);
 
   const voiceStatus = isListening
     ? "listening"
@@ -165,7 +187,6 @@ function HomePage() {
 
       <h1 style={{ fontSize: "1.5rem", margin: 0 }}>AI视觉对话助手</h1>
 
-      {/* 错误提示 */}
       {error && (
         <div
           role="alert"
@@ -223,39 +244,68 @@ function HomePage() {
         }
       />
 
+      {/* 操作区 */}
       <div
         style={{
           display: "flex",
-          gap: "1rem",
+          flexDirection: "column",
+          gap: "0.5rem",
           alignItems: "center",
           padding: "0.5rem 0",
         }}
       >
-        <IconButton
-          label={isCapturing ? "关闭摄像头" : "打开摄像头"}
-          icon={isCapturing ? "📷✅" : "📷"}
-          size="normal"
-          active={isCapturing}
-          onClick={() => {
-            if (isCapturing) stopCamera();
-            else startCamera().catch(() => {});
-          }}
-        />
-
         <VoiceIndicator status={voiceStatus as never} transcript={transcript} />
 
-        <IconButton
-          label={isListening ? "正在听取..." : "开始语音对话"}
-          icon="🎤"
-          size="large"
-          active={isListening}
-          pulse={isListening}
-          disabled={isProcessing && !isListening}
-          onClick={() => {
-            if (isListening) stopVoice();
-            else startVoice();
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <IconButton
+            label={isCapturing ? "关闭摄像头" : "打开摄像头"}
+            icon={isCapturing ? "📷✅" : "📷"}
+            size="normal"
+            active={isCapturing}
+            onClick={() => {
+              if (isCapturing) stopCamera();
+              else startCamera().catch(() => {});
+            }}
+          />
+
+          <IconButton
+            label={isListening ? "正在听取..." : "按住 T 键或点击开始"}
+            icon="🎤"
+            size="large"
+            active={isListening}
+            pulse={isListening}
+            disabled={isProcessing && !isListening}
+            onMouseDown={() => {
+              if (!isProcessing) startVoice();
+            }}
+            onMouseUp={() => {
+              if (isListening) stopVoice();
+            }}
+            onMouseLeave={() => {
+              if (isListening) stopVoice();
+            }}
+          />
+
+          <IconButton
+            label="点击开始语音对话（可按 T 键）"
+            icon="⌨️"
+            size="normal"
+            onClick={() => {
+              if (isListening) stopVoice();
+              else startVoice();
+            }}
+          />
+        </div>
+
+        <p
+          style={{
+            fontSize: "0.85rem",
+            color: "var(--color-fg-secondary)",
+            margin: 0,
           }}
-        />
+        >
+          按住 <kbd style={kbdStyle}>T</kbd> 键说话，松开停止
+        </p>
       </div>
 
       {!voiceSupported && (
@@ -274,6 +324,16 @@ function HomePage() {
     </main>
   );
 }
+
+const kbdStyle: React.CSSProperties = {
+  padding: "2px 8px",
+  border: "2px solid var(--color-primary)",
+  borderRadius: "4px",
+  fontWeight: "bold",
+  fontSize: "1rem",
+  fontFamily: "monospace",
+  background: "var(--color-bg-secondary)",
+};
 
 function SettingsPage() {
   const { ttsSpeed, ttsVolume, theme, setTTSSpeed, setTTSVolume, setTheme } =
@@ -320,11 +380,13 @@ function SettingsPage() {
         }}
       >
         <legend>🎨 主题</legend>
-        {[
-          { value: "normal" as const, label: "标准" },
-          { value: "dark" as const, label: "深色" },
-          { value: "high-contrast" as const, label: "高对比度" },
-        ].map((opt) => (
+        {(
+          [
+            { value: "normal" as const, label: "标准" },
+            { value: "dark" as const, label: "深色" },
+            { value: "high-contrast" as const, label: "高对比度" },
+          ] as const
+        ).map((opt) => (
           <label
             key={opt.value}
             style={{
