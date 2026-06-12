@@ -1,11 +1,9 @@
 .panel {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 280px);
-  max-height: 560px;
+  height: calc(100vh - 580px);
+  max-height: 360px;
   width: 100%;
-  flex: 1;
-  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
   overflow: hidden;
