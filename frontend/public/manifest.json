@@ -1,0 +1,18 @@
+{
+  "name": "AI视觉对话助手",
+  "short_name": "视觉助手",
+  "description": "面向视障人士的多模态实时视觉辅助系统",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#1a1a2e",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["utilities", "accessibility"]
+}

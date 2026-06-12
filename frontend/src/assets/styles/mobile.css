@@ -1,0 +1,51 @@
+/* ===========================================
+   移动端适配样式
+   =========================================== */
+
+@media (max-width: 768px) {
+  html {
+    font-size: 112.5%; /* 移动端稍大的基准字体 */
+  }
+
+  .app-header h1 {
+    font-size: 1.25rem;
+  }
+
+  /* 对话面板填满屏幕 */
+  [class*="ConversationPanel_panel"] {
+    max-width: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    height: calc(100vh - 240px);
+    max-height: none;
+  }
+
+  /* 消息气泡更宽 */
+  [class*="MessageBubble_bubble"] {
+    max-width: 95%;
+  }
+
+  /* 摄像头预览变小 */
+  [class*="CameraPreview_container"] {
+    width: 100px;
+    height: 75px;
+    bottom: 100px;
+    right: 8px;
+  }
+}
+
+/* 小屏幕（320-480px） */
+@media (max-width: 480px) {
+  [class*="ConversationPanel_panel"] {
+    height: calc(100vh - 220px);
+  }
+}
+
+/* 横屏适配 */
+@media (orientation: landscape) and (max-height: 600px) {
+  [class*="ConversationPanel_panel"] {
+    height: 50vh;
+    max-height: 50vh;
+  }
+}
