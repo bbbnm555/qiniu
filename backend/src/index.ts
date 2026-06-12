@@ -1,5 +1,10 @@
 import dotenv from "dotenv";
-dotenv.config();
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// 从 backend/ 向上查找项目根目录的 .env
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 import { createServer } from "http";
 import { createApp } from "./app.js";
