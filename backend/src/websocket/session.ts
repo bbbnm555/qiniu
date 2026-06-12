@@ -17,6 +17,7 @@ interface Session {
   settings: {
     ttsSpeed: number;
     ttsVolume: number;
+    ttsEngine: "browser" | "cosyvoice";
   };
   connectedAt: number;
   lastActivityAt: number;
@@ -35,6 +36,7 @@ export function createSession(ws: WebSocket): Session {
     settings: {
       ttsSpeed: 1.0,
       ttsVolume: 1.0,
+      ttsEngine: "cosyvoice",
     },
     connectedAt: Date.now(),
     lastActivityAt: Date.now(),

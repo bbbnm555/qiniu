@@ -47,6 +47,11 @@ function HomePage() {
   const { ttsEngine } = useSettingsStore();
   useAudioOutput(ttsEngine);
 
+  // 引擎切换同步到后端
+  useEffect(() => {
+    send(WS_EVENTS.SETTINGS_UPDATE, { tts_engine: ttsEngine });
+  }, [ttsEngine, send]);
+
   useEffect(() => {
     const unsub = subscribe(WS_EVENTS.RESPONSE_TEXT, (payload) => {
       const data = payload as ResponseTextPayload;

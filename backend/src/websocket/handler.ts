@@ -87,12 +87,14 @@ handlers.set(CLIENT_EVENTS.USER_QUERY, async (session, payload) => {
         is_final: false,
       });
 
-      // 合成 TTS 音频并发送
-      const audio = await ttsService.synthesize(sentence, {
-        speed: session.settings.ttsSpeed,
-      });
-      if (audio) {
-        sendBinaryToClient(session.ws, audio.buffer);
+      // 合成 TTS 音频并发送（仅 cosyvoice 模式）
+      if (session.settings.ttsEngine === "cosyvoice") {
+        const audio = await ttsService.synthesize(sentence, {
+          speed: session.settings.ttsSpeed,
+        });
+        if (audio) {
+          sendBinaryToClient(session.ws, audio.buffer);
+        }
       }
     }
 
@@ -147,6 +149,7 @@ handlers.set(CLIENT_EVENTS.SETTINGS_UPDATE, (session, payload) => {
   const data = payload as SettingsUpdatePayload;
   if (data.tts_speed != null) session.settings.ttsSpeed = data.tts_speed;
   if (data.tts_volume != null) session.settings.ttsVolume = data.tts_volume;
+  if (data.tts_engine != null) session.settings.ttsEngine = data.tts_engine;
   logger.debug(
     { sessionId: session.id, settings: session.settings },
     "⚙️ 设置已更新",

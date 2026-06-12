@@ -35,7 +35,7 @@ export interface QueryCancelPayload {
 export interface SettingsUpdatePayload {
   tts_speed?: number;
   tts_volume?: number;
-  theme?: string;
+  tts_engine?: "browser" | "cosyvoice";
 }
 
 // ---- 服务端 → 客户端 ----
