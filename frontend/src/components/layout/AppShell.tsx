@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { type ReactNode } from "react";
+import type { ReactNode } from "react";
+import styles from "./AppShell.module.css";
 
 interface AppShellProps {
   children: ReactNode;
@@ -7,13 +8,10 @@ interface AppShellProps {
 
 export default function AppShell({ children }: AppShellProps) {
   return (
-    <div className="app-shell" data-theme="normal">
-      {/* 跳过导航链接 - 屏幕阅读器友好 */}
+    <div className={styles.shell}>
       <a href="#main-content" className="skip-link">
         跳到主要内容
       </a>
-
-      {/* 屏幕阅读器实时播报区域 */}
       <div
         aria-live="polite"
         aria-atomic="true"
@@ -21,18 +19,23 @@ export default function AppShell({ children }: AppShellProps) {
         role="status"
       />
 
-      <header className="app-header" role="banner">
+      <header className={styles.header} role="banner">
+        <Link to="/" className={styles.brand} aria-label="AI视觉对话助手，首页">
+          <span className={styles.brandIcon} aria-hidden="true">
+            ◈
+          </span>
+          <span className={styles.brandText}>
+            Vision<span className={styles.brandAccent}>Talk</span>
+          </span>
+        </Link>
         <nav aria-label="主导航">
-          <Link to="/" aria-label="AI视觉对话助手，首页">
-            <h1>🎙️ AI视觉对话助手</h1>
-          </Link>
-          <Link to="/settings" aria-label="设置">
-            ⚙️
+          <Link to="/settings" className={styles.navLink} aria-label="设置">
+            <span aria-hidden="true">⚙</span> 设置
           </Link>
         </nav>
       </header>
 
-      <main id="main-content" tabIndex={-1}>
+      <main id="main-content" className={styles.main} tabIndex={-1}>
         {children}
       </main>
     </div>

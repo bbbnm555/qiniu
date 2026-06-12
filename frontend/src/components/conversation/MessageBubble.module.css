@@ -2,61 +2,106 @@
   display: flex;
   gap: var(--space-sm);
   padding: var(--space-md);
-  margin-bottom: var(--space-sm);
-  border-radius: var(--radius-md);
-  max-width: 90%;
+  margin-bottom: var(--space-md);
+  border-radius: var(--radius-lg);
+  max-width: 88%;
+  animation: fadeIn 0.35s ease-out;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 用户消息 — 右对齐，暖金 */
 .user {
   align-self: flex-end;
   flex-direction: row-reverse;
-  background: var(--color-primary);
-  color: white;
+  background: linear-gradient(
+    135deg,
+    rgba(212, 168, 83, 0.18),
+    rgba(212, 168, 83, 0.06)
+  );
+  border: 1px solid rgba(212, 168, 83, 0.2);
+  border-right: 3px solid var(--color-accent);
+  border-radius: var(--radius-lg) 4px var(--radius-lg) var(--radius-lg);
 }
 
+/* AI 消息 — 左对齐，冷蓝灰 */
 .assistant {
   align-self: flex-start;
-  background: var(--color-bg-secondary);
+  background: var(--color-bg-surface);
   border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-info);
+  border-radius: 4px var(--radius-lg) var(--radius-lg) var(--radius-lg);
 }
 
 .avatar {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   flex-shrink: 0;
   width: 36px;
-  text-align: center;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-elevated);
+}
+
+.user .avatar {
+  background: rgba(212, 168, 83, 0.15);
+}
+
+.assistant .avatar {
+  background: rgba(91, 155, 213, 0.12);
 }
 
 .content {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+  min-width: 0;
 }
 
 .text {
   font-size: var(--font-size-base);
   line-height: 1.7;
   word-break: break-word;
+  color: var(--color-fg);
 }
 
 .meta {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  font-size: 0.75rem;
-  opacity: 0.7;
+  font-size: var(--font-size-xs);
+  color: var(--color-fg-muted);
+}
+
+.time {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
 }
 
 .replayBtn {
   background: none;
-  border: 1px solid currentColor;
+  border: 1px solid var(--color-border-light);
   border-radius: var(--radius-sm);
-  color: inherit;
-  padding: 2px 8px;
+  color: var(--color-fg-secondary);
+  padding: 2px 10px;
   font-size: 0.7rem;
   cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-display);
 }
-
 .replayBtn:hover {
-  opacity: 1;
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-dim);
 }

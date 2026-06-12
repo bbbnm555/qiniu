@@ -1,79 +1,104 @@
 /* ===========================================
-   AI视觉对话助手 - 全局样式
-   采用 CSS Custom Properties 实现主题切换
+   AI视觉对话助手 — 全局样式
+   暗色工业风 + 暖金点缀
    =========================================== */
 
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap");
+
 :root {
-  /* 颜色系统 */
-  --color-bg: #ffffff;
-  --color-bg-secondary: #f5f5f5;
-  --color-fg: #1a1a1a;
-  --color-fg-secondary: #555555;
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-danger: #dc2626;
-  --color-success: #16a34a;
-  --color-warning: #f59e0b;
-  --color-border: #e0e0e0;
-  --color-focus-ring: #2563eb;
+  /* === 主色调 === */
+  --color-bg: #0a0e14;
+  --color-bg-elevated: #12171f;
+  --color-bg-surface: #181e28;
+  --color-bg-glass: rgba(18, 23, 31, 0.85);
 
-  /* 无障碍：大尺寸 */
-  --font-size-base: 1.25rem;
-  --font-size-lg: 1.5rem;
-  --font-size-xl: 2rem;
-  --line-height: 1.6;
+  /* === 文字 === */
+  --color-fg: #e4e8ee;
+  --color-fg-secondary: #8b95a5;
+  --color-fg-muted: #5a6474;
 
-  /* 间距 */
+  /* === 强调色 — 暖金 === */
+  --color-accent: #d4a853;
+  --color-accent-glow: rgba(212, 168, 83, 0.25);
+  --color-accent-hover: #e0bc6b;
+  --color-accent-dim: rgba(212, 168, 83, 0.12);
+
+  /* === 功能色 === */
+  --color-danger: #e0556a;
+  --color-danger-glow: rgba(224, 85, 106, 0.3);
+  --color-success: #4caf88;
+  --color-success-glow: rgba(76, 175, 136, 0.25);
+  --color-warning: #d4a853;
+  --color-info: #5b9bd5;
+
+  /* === 边框和分割 === */
+  --color-border: #1e2736;
+  --color-border-light: #283240;
+
+  /* === 焦点 === */
+  --color-focus-ring: #d4a853;
+
+  /* === 排版 === */
+  --font-display: "Outfit", -apple-system, sans-serif;
+  --font-mono: "DM Mono", "Consolas", monospace;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.85rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.4rem;
+  --font-size-2xl: 1.8rem;
+  --line-height: 1.65;
+
+  /* === 间距 === */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
   --space-lg: 1.5rem;
   --space-xl: 2rem;
+  --space-2xl: 3rem;
 
-  /* 触摸目标最小尺寸 */
+  /* === 触摸 === */
   --touch-target-min: 48px;
 
-  /* 圆角 */
-  --radius-sm: 8px;
+  /* === 圆角 === */
+  --radius-sm: 6px;
   --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
   --radius-full: 9999px;
 
-  /* 动画 */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
+  /* === 阴影 === */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-glow-accent: 0 0 20px var(--color-accent-glow);
+  --shadow-glow-danger: 0 0 20px var(--color-danger-glow);
 
-  /* 焦点指示器 */
-  --focus-outline: 3px solid var(--color-focus-ring);
-  --focus-outline-offset: 2px;
+  /* === 动画 === */
+  --transition-fast: 120ms ease;
+  --transition-normal: 250ms ease;
+  --transition-spring: 350ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* === 玻璃态 === */
+  --glass-bg: rgba(18, 23, 31, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-blur: 16px;
 }
 
 /* 高对比度主题 */
 [data-theme="high-contrast"] {
   --color-bg: #000000;
-  --color-bg-secondary: #1a1a1a;
+  --color-bg-elevated: #080808;
+  --color-bg-surface: #101010;
   --color-fg: #ffffff;
-  --color-fg-secondary: #cccccc;
-  --color-primary: #60a5fa;
-  --color-primary-hover: #93bbfd;
+  --color-fg-secondary: #e0e0e0;
+  --color-accent: #ffcc00;
   --color-border: #ffffff;
-  --color-focus-ring: #fbbf24;
-
-  --focus-outline: 4px solid #fbbf24;
-  --focus-outline-offset: 3px;
-}
-
-/* 深色主题 */
-[data-theme="dark"] {
-  --color-bg: #1a1a2e;
-  --color-bg-secondary: #16213e;
-  --color-fg: #e0e0e0;
-  --color-fg-secondary: #a0a0a0;
-  --color-border: #333355;
+  --color-focus-ring: #ffcc00;
 }
 
 /* ===========================================
-   全局重置 + 无障碍基础
+   全局重置
    =========================================== */
 
 *,
@@ -87,43 +112,63 @@
 html {
   font-size: 100%;
   -webkit-text-size-adjust: 100%;
+  background: var(--color-bg);
+  color: var(--color-fg);
 }
 
 body {
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Microsoft YaHei", sans-serif;
+  font-family: var(--font-display);
   font-size: var(--font-size-base);
   line-height: var(--line-height);
+  background: var(--color-bg);
   color: var(--color-fg);
-  background-color: var(--color-bg);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-/* 全局焦点样式 - 无障碍核心 */
+/* 背景纹理 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse 80% 50% at 50% -20%,
+      rgba(212, 168, 83, 0.04),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 80%,
+      rgba(91, 155, 213, 0.03),
+      transparent
+    );
+}
+
 :focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-offset);
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
-/* 跳过导航链接（供屏幕阅读器使用） */
 .skip-link {
   position: absolute;
   top: -100%;
   left: var(--space-md);
-  background: var(--color-primary);
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-bg);
   padding: var(--space-sm) var(--space-md);
   border-radius: var(--radius-sm);
   z-index: 1000;
-  font-size: var(--font-size-lg);
+  font-weight: 600;
+  text-decoration: none;
 }
-
 .skip-link:focus {
   top: var(--space-md);
 }
 
-/* 语义化 aria-live 区域（屏幕阅读器自动朗读） */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -134,4 +179,19 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-light);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-fg-muted);
 }

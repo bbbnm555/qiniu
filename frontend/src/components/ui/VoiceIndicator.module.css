@@ -3,93 +3,110 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md);
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  min-width: 200px;
 }
 
 .waveform {
   display: flex;
-  align-items: center;
-  gap: 4px;
-  height: 40px;
+  align-items: flex-end;
+  gap: 3px;
+  height: 44px;
+  padding: 0 4px;
 }
 
 .bar {
-  width: 6px;
-  border-radius: 3px;
-  background: var(--color-primary);
-  animation: wave 0.6s ease-in-out infinite alternate;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  height: 12px;
+  animation: idleWave 1.8s ease-in-out infinite;
 }
 
+/* idle — 柔和呼吸 */
+@keyframes idleWave {
+  0%,
+  100% {
+    height: 10px;
+    opacity: 0.3;
+  }
+  50% {
+    height: 22px;
+    opacity: 0.7;
+  }
+}
+
+/* listening — 活跃跳动 */
 .bar.listening {
   background: var(--color-danger);
-  animation-name: waveListening;
+  animation: listenWave 0.55s ease-in-out infinite alternate;
+  box-shadow: 0 0 6px var(--color-danger-glow);
 }
 
+@keyframes listenWave {
+  0% {
+    height: 6px;
+  }
+  100% {
+    height: 44px;
+  }
+}
+
+/* processing — 思考中 */
 .bar.processing {
-  background: var(--color-warning);
-  animation-name: wavePulse;
+  background: var(--color-accent);
+  animation: processWave 0.7s ease-in-out infinite alternate;
+  box-shadow: 0 0 6px var(--color-accent-glow);
 }
 
+@keyframes processWave {
+  0% {
+    height: 18px;
+    opacity: 0.5;
+  }
+  100% {
+    height: 40px;
+    opacity: 1;
+  }
+}
+
+/* speaking — 说话中 */
 .bar.speaking {
   background: var(--color-success);
-  animation-name: waveSpeaking;
+  animation: speakWave 0.5s ease-in-out infinite alternate;
+  box-shadow: 0 0 6px var(--color-success-glow);
 }
 
-@keyframes wave {
-  from {
-    height: 8px;
+@keyframes speakWave {
+  0% {
+    height: 40px;
   }
-  to {
-    height: 32px;
-  }
-}
-
-@keyframes waveListening {
-  0%,
   100% {
-    height: 4px;
-  }
-  50% {
-    height: 36px;
-  }
-}
-
-@keyframes wavePulse {
-  0%,
-  100% {
-    height: 16px;
-  }
-  50% {
-    height: 32px;
-  }
-}
-
-@keyframes waveSpeaking {
-  0%,
-  100% {
-    height: 32px;
-  }
-  50% {
     height: 8px;
   }
 }
 
 .label {
-  font-size: 1rem;
+  font-size: var(--font-size-sm);
   color: var(--color-fg-secondary);
   font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .transcript {
-  font-size: 0.9rem;
+  font-size: var(--font-size-sm);
   color: var(--color-fg);
-  font-style: italic;
-  max-width: 300px;
+  font-weight: 400;
+  max-width: 260px;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  opacity: 0.8;
 }

@@ -14,7 +14,6 @@ export default function MessageList({
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // 自动滚底
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -22,9 +21,16 @@ export default function MessageList({
   if (messages.length === 0) {
     return (
       <div className={styles.empty} role="status">
-        <span className={styles.emptyIcon}>🎙️</span>
-        <p>点击麦克风按钮开始语音对话</p>
-        <p className={styles.hint}>打开摄像头后，AI 可以看到你面前的环境</p>
+        <span className={styles.emptyIcon} aria-hidden="true">
+          ◈
+        </span>
+        <p className={styles.emptyTitle}>准备好开始对话</p>
+        <p className={styles.emptyHint}>
+          打开摄像头让 AI 看到你的环境，然后说话提问
+        </p>
+        <div className={styles.kbdHint}>
+          按住 <span className={styles.kbdKey}>T</span> 键开始
+        </div>
       </div>
     );
   }

@@ -18,6 +18,7 @@ import {
   type ResponseTextPayload,
   type ErrorPayload,
 } from "./services/websocket/messageTypes";
+import styles from "./App.module.css";
 
 function HomePage() {
   const { send, subscribe } = useWebSocket();
@@ -54,7 +55,6 @@ function HomePage() {
         setActiveQueryId(null);
         return;
       }
-
       const lastMsg = messages[messages.length - 1];
       if (
         !lastMsg ||
@@ -73,14 +73,12 @@ function HomePage() {
         appendToLast(data.text);
       }
     });
-
     const unsubErr = subscribe(WS_EVENTS.ERROR, (payload) => {
       const data = payload as ErrorPayload;
       setError(data.message);
       setIsProcessing(false);
       setActiveQueryId(null);
     });
-
     return () => {
       unsub();
       unsubErr();
@@ -132,30 +130,21 @@ function HomePage() {
     stop: stopVoice,
   } = useVoiceRecognition(handleVoiceResult);
 
-  // ---- 键盘控制：按住 T 录音，松开停止 ----
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "t" || e.key === "T") {
-        if (e.repeat) return; // 忽略重复触发
+      if ((e.key === "t" || e.key === "T") && !e.repeat) {
         e.preventDefault();
-        if (!isListening && !isProcessing) {
-          startVoice();
-        }
+        if (!isListening && !isProcessing) startVoice();
       }
     };
-
     const onKeyUp = (e: KeyboardEvent) => {
       if (e.key === "t" || e.key === "T") {
         e.preventDefault();
-        if (isListening) {
-          stopVoice();
-        }
+        if (isListening) stopVoice();
       }
     };
-
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
-
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
@@ -169,49 +158,25 @@ function HomePage() {
       : "idle";
 
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        padding: "1rem",
-        gap: "1rem",
-        height: "100vh",
-        maxHeight: "100vh",
-        boxSizing: "border-box",
-      }}
-    >
+    <div className={styles.page}>
       <video ref={videoRef} style={{ display: "none" }} playsInline muted />
 
-      <StatusBadge status={status} latency={latency} />
-
-      <h1 style={{ fontSize: "1.5rem", margin: 0 }}>AI视觉对话助手</h1>
+      <div className={styles.topBar}>
+        <StatusBadge status={status} latency={latency} />
+        <h1 className={styles.title}>
+          Vision<span className={styles.titleAccent}>Talk</span>
+        </h1>
+      </div>
 
       {error && (
-        <div
-          role="alert"
-          style={{
-            padding: "0.5rem 1rem",
-            background: "var(--color-danger)",
-            color: "white",
-            borderRadius: "var(--radius-sm)",
-            fontSize: "0.9rem",
-          }}
-        >
-          ⚠️ {error}
+        <div className={styles.errorAlert} role="alert">
+          ⚠ {error}
           <button
+            className={styles.errorDismiss}
             onClick={() => setError(null)}
-            style={{
-              marginLeft: "0.5rem",
-              background: "none",
-              border: "none",
-              color: "white",
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-            aria-label="关闭错误提示"
+            aria-label="关闭"
           >
-            ✕
+            ×
           </button>
         </div>
       )}
@@ -219,58 +184,45 @@ function HomePage() {
       <ConversationPanel
         messages={messages}
         header={
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <span style={{ fontSize: "0.85rem" }}>对话历史</span>
+          <>
+            <span>对话</span>
             <button
+              className="clearBtn"
               onClick={clearHistory}
+              aria-label="清空对话历史"
               style={{
                 background: "none",
-                border: "none",
-                color: "var(--color-primary)",
+                border: "1px solid var(--color-border-light)",
+                borderRadius: "var(--radius-sm)",
+                color: "var(--color-fg-muted)",
                 cursor: "pointer",
-                fontSize: "0.8rem",
+                padding: "3px 12px",
+                fontSize: "0.75rem",
               }}
-              aria-label="清空对话历史"
             >
               清空
             </button>
-          </div>
+          </>
         }
       />
 
-      {/* 操作区 */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.5rem",
-          alignItems: "center",
-          padding: "0.5rem 0",
-        }}
-      >
+      <div className={styles.controls}>
         <VoiceIndicator status={voiceStatus as never} transcript={transcript} />
 
-        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+        <div className={styles.buttonRow}>
           <IconButton
             label={isCapturing ? "关闭摄像头" : "打开摄像头"}
-            icon={isCapturing ? "📷✅" : "📷"}
+            icon={isCapturing ? "◉" : "○"}
             size="normal"
             active={isCapturing}
             onClick={() => {
-              if (isCapturing) stopCamera();
-              else startCamera().catch(() => {});
+              isCapturing ? stopCamera() : startCamera().catch(() => {});
             }}
           />
 
           <IconButton
-            label={isListening ? "正在听取..." : "按住 T 键或点击开始"}
-            icon="🎤"
+            label={isListening ? "正在听取..." : "按住说话"}
+            icon="◆"
             size="large"
             active={isListening}
             pulse={isListening}
@@ -285,66 +237,35 @@ function HomePage() {
               if (isListening) stopVoice();
             }}
           />
-
-          <IconButton
-            label="点击开始语音对话（可按 T 键）"
-            icon="⌨️"
-            size="normal"
-            onClick={() => {
-              if (isListening) stopVoice();
-              else startVoice();
-            }}
-          />
         </div>
 
-        <p
-          style={{
-            fontSize: "0.85rem",
-            color: "var(--color-fg-secondary)",
-            margin: 0,
-          }}
-        >
-          按住 <kbd style={kbdStyle}>T</kbd> 键说话，松开停止
+        <p className={styles.hint}>
+          按住 <kbd className={styles.key}>T</kbd> 键说话 · 松开停止
         </p>
+
+        {!voiceSupported && (
+          <p className={styles.unsupported}>⚠ 请使用 Chrome 或 Edge 浏览器</p>
+        )}
       </div>
 
-      {!voiceSupported && (
-        <p
-          style={{
-            color: "var(--color-danger)",
-            fontSize: "0.75rem",
-            margin: 0,
-          }}
-        >
-          ⚠️ 请使用 Chrome 或 Edge
-        </p>
-      )}
-
       <CameraPreview stream={cameraStream} isStreaming={isFrameCaptureActive} />
-    </main>
+    </div>
   );
 }
-
-const kbdStyle: React.CSSProperties = {
-  padding: "2px 8px",
-  border: "2px solid var(--color-primary)",
-  borderRadius: "4px",
-  fontWeight: "bold",
-  fontSize: "1rem",
-  fontFamily: "monospace",
-  background: "var(--color-bg-secondary)",
-};
 
 function SettingsPage() {
   const { ttsSpeed, ttsVolume, theme, setTTSSpeed, setTTSVolume, setTheme } =
     useSettingsStore();
 
   return (
-    <main style={{ padding: "2rem", maxWidth: 400, margin: "0 auto" }}>
-      <h1>设置</h1>
+    <div className={styles.settingsPage}>
+      <h1 className={styles.settingsTitle}>设置</h1>
 
-      <label style={{ display: "block", marginTop: "1.5rem" }}>
-        🗣️ TTS 语速: {ttsSpeed.toFixed(1)}x
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>
+          <span>TTS 语速</span>
+          <span className={styles.fieldValue}>{ttsSpeed.toFixed(1)}×</span>
+        </label>
         <input
           type="range"
           min="0.5"
@@ -352,13 +273,18 @@ function SettingsPage() {
           step="0.1"
           value={ttsSpeed}
           onChange={(e) => setTTSSpeed(parseFloat(e.target.value))}
-          style={{ width: "100%", marginTop: "0.5rem" }}
+          className={styles.slider}
           aria-label="语音合成语速"
         />
-      </label>
+      </div>
 
-      <label style={{ display: "block", marginTop: "1.5rem" }}>
-        🔊 TTS 音量: {Math.round(ttsVolume * 100)}%
+      <div className={styles.field}>
+        <label className={styles.fieldLabel}>
+          <span>TTS 音量</span>
+          <span className={styles.fieldValue}>
+            {Math.round(ttsVolume * 100)}%
+          </span>
+        </label>
         <input
           type="range"
           min="0"
@@ -366,49 +292,32 @@ function SettingsPage() {
           step="0.1"
           value={ttsVolume}
           onChange={(e) => setTTSVolume(parseFloat(e.target.value))}
-          style={{ width: "100%", marginTop: "0.5rem" }}
+          className={styles.slider}
           aria-label="语音合成音量"
         />
-      </label>
+      </div>
 
-      <fieldset
-        style={{
-          marginTop: "1.5rem",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-sm)",
-          padding: "1rem",
-        }}
-      >
-        <legend>🎨 主题</legend>
-        {(
-          [
-            { value: "normal" as const, label: "标准" },
-            { value: "dark" as const, label: "深色" },
-            { value: "high-contrast" as const, label: "高对比度" },
-          ] as const
-        ).map((opt) => (
-          <label
-            key={opt.value}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.5rem",
-              padding: "0.5rem 0",
-              fontSize: "1.1rem",
-            }}
-          >
+      <fieldset className={styles.themeGroup}>
+        <legend className={styles.themeLegend}>主题</legend>
+        {[
+          { value: "normal" as const, label: "暗色工业" },
+          { value: "dark" as const, label: "深邃暗黑" },
+          { value: "high-contrast" as const, label: "高对比度" },
+        ].map((opt) => (
+          <label key={opt.value} className={styles.radioRow}>
             <input
               type="radio"
               name="theme"
               value={opt.value}
               checked={theme === opt.value}
               onChange={() => setTheme(opt.value)}
+              className={styles.radio}
             />
             {opt.label}
           </label>
         ))}
       </fieldset>
-    </main>
+    </div>
   );
 }
 
