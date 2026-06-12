@@ -96,7 +96,11 @@ export class TTSService {
     });
 
     if (!response.ok) {
-      logger.error({ status: response.status }, "DashScope TTS 请求失败");
+      const errText = await response.text().catch(() => "无法读取错误");
+      logger.error(
+        { status: response.status, body: errText },
+        "DashScope TTS 请求失败",
+      );
       return null;
     }
 
