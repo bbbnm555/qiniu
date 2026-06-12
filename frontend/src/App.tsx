@@ -94,6 +94,7 @@ function HomePage() {
 
   const handleVoiceResult = useCallback(
     (text: string) => {
+      console.log("[Voice] 识别结果:", text);
       setError(null);
       if (activeQueryId && isProcessing) {
         send(WS_EVENTS.QUERY_CANCEL, { query_id: activeQueryId });
@@ -107,6 +108,7 @@ function HomePage() {
         timestamp: Date.now(),
         queryId,
       });
+      console.log("[Voice] 发送 user.query, queryId:", queryId);
       send(WS_EVENTS.USER_QUERY, { query_id: queryId, text });
       setIsProcessing(true);
     },

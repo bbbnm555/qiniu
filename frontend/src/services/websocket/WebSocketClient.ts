@@ -97,7 +97,10 @@ export class WebSocketClient {
   // ---- 消息发送 ----
 
   send(type: string, payload: Record<string, unknown> = {}): void {
-    if (this.ws?.readyState !== WebSocket.OPEN) return;
+    if (this.ws?.readyState !== WebSocket.OPEN) {
+      console.warn("[WS] 未连接，消息丢弃:", type);
+      return;
+    }
 
     const message: WSMessage = {
       type,
