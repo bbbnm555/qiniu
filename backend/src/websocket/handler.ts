@@ -15,6 +15,7 @@ import type {
   SettingsUpdatePayload,
 } from "./protocol.js";
 import { visionService } from "../services/ai/visionService.js";
+import { ttsService } from "../services/ai/ttsService.js";
 import { ContextService } from "../services/ai/contextService.js";
 import { logger } from "../utils/logger.js";
 
@@ -79,11 +80,20 @@ handlers.set(CLIENT_EVENTS.USER_QUERY, async (session, payload) => {
     })) {
       fullAnswer += sentence;
 
+      // 发送文本
       sendToClient(session.ws, SERVER_EVENTS.RESPONSE_TEXT, {
         query_id: data.query_id,
         text: sentence,
         is_final: false,
       });
+
+      // 合成 TTS 音频并发送
+      const audio = await ttsService.synthesize(sentence, {
+        speed: session.settings.ttsSpeed,
+      });
+      if (audio) {
+        sendBinaryToClient(session.ws, audio.buffer);
+      }
     }
 
     // 发送结束标记

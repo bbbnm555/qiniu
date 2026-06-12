@@ -10,6 +10,7 @@ import { useWebSocket } from "./hooks/useWebSocket";
 import { useConnectionStore } from "./stores/useConnectionStore";
 import { useMediaStream } from "./hooks/useMediaStream";
 import { useVoiceRecognition } from "./hooks/useVoiceRecognition";
+import { useAudioOutput } from "./hooks/useAudioOutput";
 
 function HomePage() {
   const { screenReaderActive, prefersReducedMotion } = useAccessibility();
@@ -41,6 +42,9 @@ function HomePage() {
     start: startVoice,
     stop: stopVoice,
   } = useVoiceRecognition(handleVoiceResult);
+
+  // 激活音频播放（监听 WS Binary 帧）
+  useAudioOutput();
 
   const voiceStatus = isListening
     ? "listening"
