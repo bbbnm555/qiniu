@@ -4,17 +4,22 @@ import type { Message } from "../types/conversation";
 interface ConversationState {
   messages: Message[];
   isProcessing: boolean;
+  activeQueryId: string | null;
+  error: string | null;
 
   addMessage: (msg: Message) => void;
-  /** 更新最后一条消息（用于流式追加内容） */
   appendToLast: (content: string) => void;
   setIsProcessing: (v: boolean) => void;
+  setActiveQueryId: (id: string | null) => void;
+  setError: (err: string | null) => void;
   clearHistory: () => void;
 }
 
 export const useConversationStore = create<ConversationState>((set) => ({
   messages: [],
   isProcessing: false,
+  activeQueryId: null,
+  error: null,
 
   addMessage: (msg) =>
     set((state) => ({
@@ -32,6 +37,7 @@ export const useConversationStore = create<ConversationState>((set) => ({
     }),
 
   setIsProcessing: (v) => set({ isProcessing: v }),
-
-  clearHistory: () => set({ messages: [], isProcessing: false }),
+  setActiveQueryId: (id) => set({ activeQueryId: id }),
+  setError: (err) => set({ error: err }),
+  clearHistory: () => set({ messages: [], isProcessing: false, error: null }),
 }));

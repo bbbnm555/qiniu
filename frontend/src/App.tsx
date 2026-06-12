@@ -16,10 +16,10 @@ import { useAudioOutput } from "./hooks/useAudioOutput";
 import {
   WS_EVENTS,
   type ResponseTextPayload,
+  type ErrorPayload,
 } from "./services/websocket/messageTypes";
 
 function HomePage() {
-  const { screenReaderActive, prefersReducedMotion } = useAccessibility();
   const { send, subscribe } = useWebSocket();
   const { status, latency } = useConnectionStore();
   const {
@@ -34,25 +34,28 @@ function HomePage() {
   const {
     messages,
     isProcessing,
+    activeQueryId,
+    error,
     addMessage,
     appendToLast,
     setIsProcessing,
+    setActiveQueryId,
+    setError,
     clearHistory,
   } = useConversationStore();
 
   useAudioOutput();
 
-  // 订阅 WS response.text → 追加到对话
+  // 订阅 WS response.text + error
   useEffect(() => {
     const unsub = subscribe(WS_EVENTS.RESPONSE_TEXT, (payload) => {
       const data = payload as ResponseTextPayload;
-
       if (data.is_final) {
         setIsProcessing(false);
+        setActiveQueryId(null);
         return;
       }
 
-      // 第一个句子：新增消息
       const lastMsg = messages[messages.length - 1];
       if (
         !lastMsg ||
@@ -68,31 +71,44 @@ function HomePage() {
           hasAudio: true,
         });
       } else {
-        // 后续句子：追加
         appendToLast(data.text);
       }
     });
 
-    // 订阅 WS status → 处理状态
-    const unsubStatus = subscribe(WS_EVENTS.STATUS, (payload) => {
-      const data = payload as { status: string };
-      if (data.status === "speaking") {
-        // TTS 播放中
-      }
+    const unsubErr = subscribe(WS_EVENTS.ERROR, (payload) => {
+      const data = payload as ErrorPayload;
+      setError(data.message);
+      setIsProcessing(false);
+      setActiveQueryId(null);
     });
 
     return () => {
       unsub();
-      unsubStatus();
+      unsubErr();
     };
-  }, [subscribe, addMessage, appendToLast, setIsProcessing, messages]);
+  }, [
+    subscribe,
+    addMessage,
+    appendToLast,
+    setIsProcessing,
+    setActiveQueryId,
+    setError,
+    messages,
+  ]);
 
-  // 语音识别 → 发送 user.query + 添加用户消息
+  // 语音识别 → 发送 user.query（自动中断上一个）
   const handleVoiceResult = useCallback(
     (text: string) => {
-      const queryId = crypto.randomUUID();
+      setError(null);
 
-      // 添加用户消息
+      // 如果正在处理，先取消上一个
+      if (activeQueryId && isProcessing) {
+        send(WS_EVENTS.QUERY_CANCEL, { query_id: activeQueryId });
+      }
+
+      const queryId = crypto.randomUUID();
+      setActiveQueryId(queryId);
+
       addMessage({
         id: crypto.randomUUID(),
         role: "user",
@@ -101,11 +117,18 @@ function HomePage() {
         queryId,
       });
 
-      // 发送到后端
       send(WS_EVENTS.USER_QUERY, { query_id: queryId, text });
       setIsProcessing(true);
     },
-    [send, addMessage, setIsProcessing],
+    [
+      send,
+      addMessage,
+      setIsProcessing,
+      setActiveQueryId,
+      setError,
+      activeQueryId,
+      isProcessing,
+    ],
   );
 
   const {
@@ -141,7 +164,36 @@ function HomePage() {
 
       <h1 style={{ fontSize: "1.5rem", margin: 0 }}>AI视觉对话助手</h1>
 
-      {/* 对话面板 */}
+      {/* 错误提示 */}
+      {error && (
+        <div
+          role="alert"
+          style={{
+            padding: "0.5rem 1rem",
+            background: "var(--color-danger)",
+            color: "white",
+            borderRadius: "var(--radius-sm)",
+            fontSize: "0.9rem",
+          }}
+        >
+          ⚠️ {error}
+          <button
+            onClick={() => setError(null)}
+            style={{
+              marginLeft: "0.5rem",
+              background: "none",
+              border: "none",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: "bold",
+            }}
+            aria-label="关闭错误提示"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <ConversationPanel
         messages={messages}
         header={
@@ -170,7 +222,6 @@ function HomePage() {
         }
       />
 
-      {/* 操作栏 */}
       <div
         style={{
           display: "flex",
@@ -193,7 +244,7 @@ function HomePage() {
         <VoiceIndicator status={voiceStatus as never} transcript={transcript} />
 
         <IconButton
-          label={isListening ? "正在听取，点击停止" : "点击开始语音对话"}
+          label={isListening ? "正在听取..." : "开始语音对话"}
           icon="🎤"
           size="large"
           active={isListening}
