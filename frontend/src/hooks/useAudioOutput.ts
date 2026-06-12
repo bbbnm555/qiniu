@@ -16,7 +16,7 @@ export function useAudioOutput() {
 
   const getAudioContext = useCallback(() => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      audioContextRef.current = new AudioContext(); // 使用系统默认音频输出设备
     }
     return audioContextRef.current;
   }, []);

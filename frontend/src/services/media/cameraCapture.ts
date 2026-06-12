@@ -71,7 +71,7 @@ export async function getUserMediaStream(): Promise<MediaStream> {
     audio: {
       echoCancellation: true,
       noiseSuppression: true,
-      sampleRate: 16000, // 语音识别常用采样率
+      // 不指定 deviceId / sampleRate，使用系统默认麦克风和采样率
     },
   };
 
