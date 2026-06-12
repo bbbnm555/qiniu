@@ -1,15 +1,13 @@
 import { useState, useRef, useCallback } from "react";
 
+/** 最长录音时长（秒） */
+const MAX_RECORD_SECONDS = 30;
+
 interface VoiceRecognitionResult {
-  /** 识别文本 */
   transcript: string;
-  /** 是否正在监听 */
   isListening: boolean;
-  /** 是否有浏览器原生支持 */
   isSupported: boolean;
-  /** 开始监听 */
   start: () => void;
-  /** 停止监听 */
   stop: () => void;
 }
 
@@ -26,6 +24,7 @@ export function useVoiceRecognition(
   const [transcript, setTranscript] = useState("");
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isSupported =
     typeof window !== "undefined" &&
@@ -70,12 +69,21 @@ export function useVoiceRecognition(
       }
     };
 
+    // 30 秒自动停止
+    timeoutRef.current = setTimeout(() => {
+      recognitionRef.current?.stop();
+    }, MAX_RECORD_SECONDS * 1000);
+
     recognition.start();
     setIsListening(true);
     setTranscript("");
   }, [isSupported, onResult, transcript]);
 
   const stop = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     recognitionRef.current?.stop();
     setIsListening(false);
   }, []);
