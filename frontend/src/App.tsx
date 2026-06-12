@@ -5,9 +5,13 @@ import VoiceIndicator from "./components/ui/VoiceIndicator";
 import StatusBadge from "./components/ui/StatusBadge";
 import CameraPreview from "./components/ui/CameraPreview";
 import { useAccessibility } from "./hooks/useAccessibility";
+import { useWebSocket } from "./hooks/useWebSocket";
+import { useConnectionStore } from "./stores/useConnectionStore";
 
 function HomePage() {
   const { screenReaderActive, prefersReducedMotion } = useAccessibility();
+  const { send } = useWebSocket();
+  const { status, latency } = useConnectionStore();
 
   return (
     <main
@@ -19,7 +23,7 @@ function HomePage() {
         gap: "2rem",
       }}
     >
-      <StatusBadge status="disconnected" />
+      <StatusBadge status={status} latency={latency} />
 
       <h1>AI视觉对话助手</h1>
       <p>点击下方麦克风按钮开始对话</p>
@@ -32,6 +36,10 @@ function HomePage() {
         size="large"
         onClick={() => {
           // TODO: Task-07 集成语音识别
+          send("user.query", {
+            query_id: crypto.randomUUID(),
+            text: "测试消息",
+          });
         }}
       />
 
