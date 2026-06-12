@@ -1,74 +1,79 @@
-import { useRef, useCallback, useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useWebSocket } from "./useWebSocket";
-import { WS_EVENTS } from "../services/websocket/messageTypes";
+import {
+  WS_EVENTS,
+  type ResponseTextPayload,
+} from "../services/websocket/messageTypes";
 
 /**
  * TTS 音频播放 Hook
  *
- * 监听 WebSocket Binary 帧（TTS 音频数据），使用 AudioContext 按序播放
- * 维护一个播放队列，确保音频按句子顺序播放
+ * 优先使用浏览器内置 SpeechSynthesis（免费、可靠）
+ * 同时监听 WS Binary 帧（后端 TTS 音频）作为备选
  */
 export function useAudioOutput() {
-  const { client } = useWebSocket();
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const queueRef = useRef<ArrayBuffer[]>([]);
-  const isPlayingRef = useRef(false);
+  const { client, subscribe } = useWebSocket();
+  const queueRef = useRef<string[]>([]);
+  const speakingRef = useRef(false);
 
-  const getAudioContext = useCallback(() => {
-    if (!audioContextRef.current) {
-      audioContextRef.current = new AudioContext(); // 使用系统默认音频输出设备
-    }
-    return audioContextRef.current;
-  }, []);
+  /** 浏览器 TTS 播放一句话 */
+  const speakText = (text: string) => {
+    if (!window.speechSynthesis) return;
 
-  const playNext = useCallback(async () => {
-    if (isPlayingRef.current || queueRef.current.length === 0) return;
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "zh-CN";
+    utter.rate = 1.0;
+    utter.volume = 1.0;
+    speakingRef.current = true;
 
-    isPlayingRef.current = true;
-    const ctx = getAudioContext();
-
-    while (queueRef.current.length > 0) {
-      const data = queueRef.current.shift()!;
-      try {
-        const audioBuffer = await ctx.decodeAudioData(data.slice(0));
-        const source = ctx.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(ctx.destination);
-        source.start();
-
-        await new Promise<void>((resolve) => {
-          source.onended = () => resolve();
-        });
-      } catch {
-        // 音频解码失败，跳过
-      }
-    }
-
-    isPlayingRef.current = false;
-  }, [getAudioContext]);
-
-  // 监听 Binary 帧
-  useEffect(() => {
-    const unsub = client.onBinary((data: ArrayBuffer) => {
-      queueRef.current.push(data);
-      playNext();
-    });
-
-    return unsub;
-  }, [client, playNext]);
-
-  // 清理
-  useEffect(() => {
-    return () => {
-      audioContextRef.current?.close();
-      audioContextRef.current = null;
+    utter.onend = () => {
+      speakingRef.current = false;
+      // 播放下一个
+      const next = queueRef.current.shift();
+      if (next) speakText(next);
     };
-  }, []);
+
+    utter.onerror = () => {
+      speakingRef.current = false;
+      const next = queueRef.current.shift();
+      if (next) speakText(next);
+    };
+
+    window.speechSynthesis.speak(utter);
+  };
+
+  const enqueue = (text: string) => {
+    if (speakingRef.current) {
+      queueRef.current.push(text);
+    } else {
+      speakText(text);
+    }
+  };
+
+  // 监听 WS response.text → 浏览器 TTS 朗读
+  useEffect(() => {
+    const unsub = subscribe(WS_EVENTS.RESPONSE_TEXT, (payload) => {
+      const data = payload as ResponseTextPayload;
+      if (data.is_final) return; // 结束标记不朗读
+      if (data.text.trim()) {
+        enqueue(data.text.trim());
+      }
+    });
+    return unsub;
+  }, [subscribe]);
+
+  // 监听 Binary 帧（后端 TTS 音频，备选）
+  useEffect(() => {
+    const unsub = client.onBinary((_data: ArrayBuffer) => {
+      // Binary 帧已由 response.text 处理，这里忽略
+    });
+    return unsub;
+  }, [client]);
 
   return {
-    /** 清空播放队列 */
     clearQueue: () => {
       queueRef.current = [];
+      window.speechSynthesis?.cancel();
     },
   };
 }
