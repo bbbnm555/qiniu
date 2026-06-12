@@ -181,30 +181,36 @@ function HomePage() {
         </div>
       )}
 
-      <ConversationPanel
-        messages={messages}
-        header={
-          <>
-            <span>对话</span>
-            <button
-              className="clearBtn"
-              onClick={clearHistory}
-              aria-label="清空对话历史"
-              style={{
-                background: "none",
-                border: "1px solid var(--color-border-light)",
-                borderRadius: "var(--radius-sm)",
-                color: "var(--color-fg-muted)",
-                cursor: "pointer",
-                padding: "3px 12px",
-                fontSize: "0.75rem",
-              }}
-            >
-              清空
-            </button>
-          </>
-        }
-      />
+      <div className={styles.mainArea}>
+        <CameraPreview
+          stream={cameraStream}
+          isStreaming={isFrameCaptureActive}
+        />
+        <ConversationPanel
+          messages={messages}
+          header={
+            <>
+              <span>对话</span>
+              <button
+                className="clearBtn"
+                onClick={clearHistory}
+                aria-label="清空对话历史"
+                style={{
+                  background: "none",
+                  border: "1px solid var(--color-border-light)",
+                  borderRadius: "var(--radius-sm)",
+                  color: "var(--color-fg-muted)",
+                  cursor: "pointer",
+                  padding: "3px 12px",
+                  fontSize: "0.75rem",
+                }}
+              >
+                清空
+              </button>
+            </>
+          }
+        />
+      </div>
 
       <div className={styles.controls}>
         <VoiceIndicator status={voiceStatus as never} transcript={transcript} />
@@ -247,8 +253,6 @@ function HomePage() {
           <p className={styles.unsupported}>⚠ 请使用 Chrome 或 Edge 浏览器</p>
         )}
       </div>
-
-      <CameraPreview stream={cameraStream} isStreaming={isFrameCaptureActive} />
     </div>
   );
 }
