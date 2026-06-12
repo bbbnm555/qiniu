@@ -13,6 +13,7 @@ import { useConversationStore } from "./stores/useConversationStore";
 import { useMediaStream } from "./hooks/useMediaStream";
 import { useVoiceRecognition } from "./hooks/useVoiceRecognition";
 import { useAudioOutput } from "./hooks/useAudioOutput";
+import { useSettingsStore } from "./stores/useSettingsStore";
 import {
   WS_EVENTS,
   type ResponseTextPayload,
@@ -275,10 +276,76 @@ function HomePage() {
 }
 
 function SettingsPage() {
+  const { ttsSpeed, ttsVolume, theme, setTTSSpeed, setTTSVolume, setTheme } =
+    useSettingsStore();
+
   return (
-    <main style={{ padding: "2rem" }}>
+    <main style={{ padding: "2rem", maxWidth: 400, margin: "0 auto" }}>
       <h1>设置</h1>
-      <p>设置页面即将上线</p>
+
+      <label style={{ display: "block", marginTop: "1.5rem" }}>
+        🗣️ TTS 语速: {ttsSpeed.toFixed(1)}x
+        <input
+          type="range"
+          min="0.5"
+          max="2.0"
+          step="0.1"
+          value={ttsSpeed}
+          onChange={(e) => setTTSSpeed(parseFloat(e.target.value))}
+          style={{ width: "100%", marginTop: "0.5rem" }}
+          aria-label="语音合成语速"
+        />
+      </label>
+
+      <label style={{ display: "block", marginTop: "1.5rem" }}>
+        🔊 TTS 音量: {Math.round(ttsVolume * 100)}%
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.1"
+          value={ttsVolume}
+          onChange={(e) => setTTSVolume(parseFloat(e.target.value))}
+          style={{ width: "100%", marginTop: "0.5rem" }}
+          aria-label="语音合成音量"
+        />
+      </label>
+
+      <fieldset
+        style={{
+          marginTop: "1.5rem",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-sm)",
+          padding: "1rem",
+        }}
+      >
+        <legend>🎨 主题</legend>
+        {[
+          { value: "normal" as const, label: "标准" },
+          { value: "dark" as const, label: "深色" },
+          { value: "high-contrast" as const, label: "高对比度" },
+        ].map((opt) => (
+          <label
+            key={opt.value}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.5rem 0",
+              fontSize: "1.1rem",
+            }}
+          >
+            <input
+              type="radio"
+              name="theme"
+              value={opt.value}
+              checked={theme === opt.value}
+              onChange={() => setTheme(opt.value)}
+            />
+            {opt.label}
+          </label>
+        ))}
+      </fieldset>
     </main>
   );
 }
