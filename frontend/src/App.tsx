@@ -44,7 +44,8 @@ function HomePage() {
     clearHistory,
   } = useConversationStore();
 
-  useAudioOutput();
+  const { ttsEngine } = useSettingsStore();
+  useAudioOutput(ttsEngine);
 
   useEffect(() => {
     const unsub = subscribe(WS_EVENTS.RESPONSE_TEXT, (payload) => {
@@ -294,8 +295,16 @@ function HomePage() {
 }
 
 function SettingsPage() {
-  const { ttsSpeed, ttsVolume, theme, setTTSSpeed, setTTSVolume, setTheme } =
-    useSettingsStore();
+  const {
+    ttsSpeed,
+    ttsVolume,
+    ttsEngine,
+    theme,
+    setTTSSpeed,
+    setTTSVolume,
+    setTTSEngine,
+    setTheme,
+  } = useSettingsStore();
 
   return (
     <div className={styles.settingsPage}>
@@ -336,6 +345,26 @@ function SettingsPage() {
           aria-label="语音合成音量"
         />
       </div>
+
+      <fieldset className={styles.themeGroup}>
+        <legend className={styles.themeLegend}>语音引擎</legend>
+        {[
+          { value: "cosyvoice" as const, label: "cosyvoice（云端高音质）" },
+          { value: "browser" as const, label: "浏览器内置（免费）" },
+        ].map((opt) => (
+          <label key={opt.value} className={styles.radioRow}>
+            <input
+              type="radio"
+              name="ttsEngine"
+              value={opt.value}
+              checked={ttsEngine === opt.value}
+              onChange={() => setTTSEngine(opt.value)}
+              className={styles.radio}
+            />
+            {opt.label}
+          </label>
+        ))}
+      </fieldset>
 
       <fieldset className={styles.themeGroup}>
         <legend className={styles.themeLegend}>主题</legend>

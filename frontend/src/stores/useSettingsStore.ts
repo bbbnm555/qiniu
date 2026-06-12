@@ -1,25 +1,33 @@
 import { create } from "zustand";
 
+export type TTSEngine = "browser" | "cosyvoice";
+
 interface SettingsState {
   ttsSpeed: number;
   ttsVolume: number;
+  ttsEngine: TTSEngine;
   theme: "normal" | "dark" | "high-contrast";
 
   setTTSSpeed: (v: number) => void;
   setTTSVolume: (v: number) => void;
+  setTTSEngine: (e: TTSEngine) => void;
   setTheme: (t: SettingsState["theme"]) => void;
 }
 
-// 从 localStorage 恢复
 function loadInitial(): Pick<
   SettingsState,
-  "ttsSpeed" | "ttsVolume" | "theme"
+  "ttsSpeed" | "ttsVolume" | "ttsEngine" | "theme"
 > {
   try {
     const saved = localStorage.getItem("ai-vision-settings");
     if (saved) return JSON.parse(saved);
   } catch {}
-  return { ttsSpeed: 1.0, ttsVolume: 1.0, theme: "normal" };
+  return {
+    ttsSpeed: 1.0,
+    ttsVolume: 1.0,
+    ttsEngine: "cosyvoice",
+    theme: "normal",
+  };
 }
 
 const initial = loadInitial();
@@ -29,26 +37,31 @@ export const useSettingsStore = create<SettingsState>((set) => ({
 
   setTTSSpeed: (v) => {
     set({ ttsSpeed: v });
-    persistSettings();
+    persist();
   },
   setTTSVolume: (v) => {
     set({ ttsVolume: v });
-    persistSettings();
+    persist();
+  },
+  setTTSEngine: (e) => {
+    set({ ttsEngine: e });
+    persist();
   },
   setTheme: (t) => {
     set({ theme: t });
     document.documentElement.setAttribute("data-theme", t);
-    persistSettings();
+    persist();
   },
 }));
 
-function persistSettings() {
+function persist() {
   const state = useSettingsStore.getState();
   localStorage.setItem(
     "ai-vision-settings",
     JSON.stringify({
       ttsSpeed: state.ttsSpeed,
       ttsVolume: state.ttsVolume,
+      ttsEngine: state.ttsEngine,
       theme: state.theme,
     }),
   );
