@@ -56,6 +56,7 @@ export const WS_EVENTS = {
   FRAME_UPDATE: "frame.update",
   QUERY_CANCEL: "query.cancel",
   SETTINGS_UPDATE: "settings.update",
+  TTS_SPEAK: "tts.speak",
   PING: "ping",
   // 接收
   RESPONSE_TEXT: "response.text",

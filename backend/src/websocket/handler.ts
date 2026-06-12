@@ -156,6 +156,17 @@ handlers.set(CLIENT_EVENTS.SETTINGS_UPDATE, (session, payload) => {
   );
 });
 
+handlers.set(CLIENT_EVENTS.TTS_SPEAK, async (session, payload) => {
+  const data = payload as { text: string };
+  if (!data.text) return;
+  const audio = await ttsService.synthesize(data.text, {
+    speed: session.settings.ttsSpeed,
+  });
+  if (audio) {
+    sendBinaryToClient(session.ws, audio.buffer);
+  }
+});
+
 handlers.set(CLIENT_EVENTS.PING, (session) => {
   sendToClient(session.ws, SERVER_EVENTS.PONG, {
     server_time: Date.now(),
