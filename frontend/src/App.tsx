@@ -72,11 +72,13 @@ function HomePage() {
   useAudioOutput(ttsEngine);
   const { announce } = useAudioFeedback();
 
-  // WS 连接状态 → 语音提示
+  // WS 连接状态 → 语音提示（仅播一次）
   useEffect(() => {
-    if (status === "connected") announce("连接成功，等待唤醒");
-    if (status === "disconnected") announce("连接断开");
-  }, [status, announce]);
+    if (status === "connected") {
+      announce("连接成功", true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   // 语音唤醒：你好VT → 自动开启摄像头
   const handleWake = useCallback(() => {
