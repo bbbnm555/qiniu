@@ -212,7 +212,7 @@ function HomePage() {
         <div className={styles.buttonRow}>
           <IconButton
             label={isCapturing ? "关闭摄像头" : "打开摄像头"}
-            icon={isCapturing ? "◉" : "○"}
+            icon={isCapturing ? "📷" : "📷"}
             size="normal"
             active={isCapturing}
             onClick={() => {
@@ -222,7 +222,7 @@ function HomePage() {
 
           <IconButton
             label={isListening ? "正在听取..." : "按住说话"}
-            icon="◆"
+            icon="🎤"
             size="large"
             active={isListening}
             pulse={isListening}
