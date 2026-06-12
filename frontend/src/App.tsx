@@ -5,7 +5,6 @@ import IconButton from "./components/ui/IconButton";
 import VoiceIndicator from "./components/ui/VoiceIndicator";
 import StatusBadge from "./components/ui/StatusBadge";
 import CameraPreview from "./components/ui/CameraPreview";
-import ConversationPanel from "./components/conversation/ConversationPanel";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { useConnectionStore } from "./stores/useConnectionStore";
 import { useConversationStore } from "./stores/useConversationStore";
@@ -185,30 +184,6 @@ function HomePage() {
         <CameraPreview
           stream={cameraStream}
           isStreaming={isFrameCaptureActive}
-        />
-        <ConversationPanel
-          messages={messages}
-          header={
-            <>
-              <span>对话</span>
-              <button
-                className="clearBtn"
-                onClick={clearHistory}
-                aria-label="清空对话历史"
-                style={{
-                  background: "none",
-                  border: "1px solid var(--color-border-light)",
-                  borderRadius: "var(--radius-sm)",
-                  color: "var(--color-fg-muted)",
-                  cursor: "pointer",
-                  padding: "3px 12px",
-                  fontSize: "0.75rem",
-                }}
-              >
-                清空
-              </button>
-            </>
-          }
         />
       </div>
 
