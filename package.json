@@ -1,0 +1,20 @@
+{
+  "name": "ai-vision-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI视觉对话助手 - 面向视障人士的多模态实时视觉辅助系统",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently -n frontend,backend -c cyan,green \"npm run dev -w frontend\" \"npm run dev -w backend\"",
+    "build": "npm run build -w frontend && npm run build -w backend",
+    "lint": "npm run lint -w frontend && npm run lint -w backend",
+    "clean": "rimraf frontend/dist backend/dist"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.10"
+  }
+}
