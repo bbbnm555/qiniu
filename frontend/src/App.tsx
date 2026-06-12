@@ -11,6 +11,8 @@ import { useConversationStore } from "./stores/useConversationStore";
 import { useMediaStream } from "./hooks/useMediaStream";
 import { useVoiceRecognition } from "./hooks/useVoiceRecognition";
 import { useAudioOutput } from "./hooks/useAudioOutput";
+import { useWakeWord } from "./hooks/useWakeWord";
+import { useAudioFeedback } from "./hooks/useAudioFeedback";
 import { useSettingsStore } from "./stores/useSettingsStore";
 import {
   WS_EVENTS,
@@ -68,6 +70,25 @@ function HomePage() {
 
   const { ttsEngine } = useSettingsStore();
   useAudioOutput(ttsEngine);
+  const { announce } = useAudioFeedback();
+
+  // WS 连接状态 → 语音提示
+  useEffect(() => {
+    if (status === "connected") announce("连接成功，等待唤醒");
+    if (status === "disconnected") announce("连接断开");
+  }, [status, announce]);
+
+  // 语音唤醒：你好VT → 自动开启摄像头
+  const handleWake = useCallback(() => {
+    announce("你好，正在为您开启摄像头", true);
+    setTimeout(() => {
+      startCamera()
+        .then(() => announce("摄像头已开启，请提问"))
+        .catch(() => announce("摄像头开启失败"));
+    }, 800);
+  }, [announce, startCamera]);
+
+  useWakeWord(handleWake);
 
   useEffect(() => {
     send(WS_EVENTS.SETTINGS_UPDATE, { tts_engine: ttsEngine });
