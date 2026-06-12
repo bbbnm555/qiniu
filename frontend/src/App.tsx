@@ -1,4 +1,5 @@
 import { Routes, Route } from "react-router-dom";
+import { useCallback } from "react";
 import AppShell from "./components/layout/AppShell";
 import IconButton from "./components/ui/IconButton";
 import VoiceIndicator from "./components/ui/VoiceIndicator";
@@ -8,6 +9,7 @@ import { useAccessibility } from "./hooks/useAccessibility";
 import { useWebSocket } from "./hooks/useWebSocket";
 import { useConnectionStore } from "./stores/useConnectionStore";
 import { useMediaStream } from "./hooks/useMediaStream";
+import { useVoiceRecognition } from "./hooks/useVoiceRecognition";
 
 function HomePage() {
   const { screenReaderActive, prefersReducedMotion } = useAccessibility();
@@ -22,6 +24,30 @@ function HomePage() {
     stopCamera,
   } = useMediaStream();
 
+  const handleVoiceResult = useCallback(
+    (text: string) => {
+      send("user.query", {
+        query_id: crypto.randomUUID(),
+        text,
+      });
+    },
+    [send],
+  );
+
+  const {
+    transcript,
+    isListening,
+    isSupported: voiceSupported,
+    start: startVoice,
+    stop: stopVoice,
+  } = useVoiceRecognition(handleVoiceResult);
+
+  const voiceStatus = isListening
+    ? "listening"
+    : transcript
+      ? "processing"
+      : "idle";
+
   return (
     <main
       style={{
@@ -32,15 +58,17 @@ function HomePage() {
         gap: "2rem",
       }}
     >
-      {/* 隐藏的 video 元素用于帧捕获 */}
       <video ref={videoRef} style={{ display: "none" }} playsInline muted />
 
       <StatusBadge status={status} latency={latency} />
 
       <h1>AI视觉对话助手</h1>
-      <p>点击下方麦克风按钮开始对话</p>
+      <p>
+        {voiceSupported
+          ? "点击麦克风按钮开始语音对话"
+          : "浏览器不支持语音识别，请在 Chrome/Edge 中打开"}
+      </p>
 
-      {/* 摄像头控制 */}
       <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
         <IconButton
           label={isCapturing ? "关闭摄像头" : "打开摄像头"}
@@ -66,17 +94,20 @@ function HomePage() {
         </span>
       </div>
 
-      <VoiceIndicator status="idle" />
+      <VoiceIndicator status={voiceStatus as never} transcript={transcript} />
 
       <IconButton
-        label="按住开始语音对话"
+        label={isListening ? "正在听取，点击停止" : "点击开始语音对话"}
         icon="🎤"
         size="large"
+        active={isListening}
+        pulse={isListening}
         onClick={() => {
-          send("user.query", {
-            query_id: crypto.randomUUID(),
-            text: "测试消息",
-          });
+          if (isListening) {
+            stopVoice();
+          } else {
+            startVoice();
+          }
         }}
       />
 
@@ -88,6 +119,11 @@ function HomePage() {
       {prefersReducedMotion && (
         <p style={{ color: "var(--color-warning)", fontSize: "0.9rem" }}>
           🎯 已启用减弱动画模式
+        </p>
+      )}
+      {!voiceSupported && (
+        <p style={{ color: "var(--color-danger)", fontSize: "0.85rem" }}>
+          ⚠️ 当前浏览器不支持 SpeechRecognition，请使用 Chrome 或 Edge
         </p>
       )}
 
