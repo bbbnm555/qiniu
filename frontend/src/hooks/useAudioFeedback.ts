@@ -1,27 +1,42 @@
-import { useCallback } from "react";
-import { useWebSocket } from "./useWebSocket";
-import { useSettingsStore } from "../stores/useSettingsStore";
-import { WS_EVENTS } from "../services/websocket/messageTypes";
+import { useCallback, useRef } from "react";
 
+const queueRef: string[] = [];
+let speaking = false;
+
+function speakNext() {
+  if (speaking || queueRef.length === 0) return;
+  if (!window.speechSynthesis) return;
+
+  const text = queueRef.shift()!;
+  speaking = true;
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = "zh-CN";
+  utter.rate = 1.05;
+  utter.volume = 1.0;
+  utter.onend = () => {
+    speaking = false;
+    speakNext();
+  };
+  utter.onerror = () => {
+    speaking = false;
+    speakNext();
+  };
+  window.speechSynthesis.speak(utter);
+}
+
+/**
+ * 语音反馈 — 始终用浏览器 SpeechSynthesis，保证 100% 可靠
+ */
 export function useAudioFeedback() {
-  const { send } = useWebSocket();
-  const ttsEngine = useSettingsStore((s) => s.ttsEngine);
-
-  const announce = useCallback(
-    (message: string, interrupt = false) => {
-      if (ttsEngine === "cosyvoice") {
-        send(WS_EVENTS.TTS_SPEAK, { text: message });
-      } else {
-        if (interrupt) window.speechSynthesis?.cancel();
-        const utter = new SpeechSynthesisUtterance(message);
-        utter.lang = "zh-CN";
-        utter.rate = 1.1;
-        utter.volume = 1.0;
-        window.speechSynthesis?.speak(utter);
-      }
-    },
-    [send, ttsEngine],
-  );
+  const announce = useCallback((message: string, interrupt = false) => {
+    if (interrupt) {
+      window.speechSynthesis?.cancel();
+      queueRef.length = 0;
+      speaking = false;
+    }
+    queueRef.push(message);
+    speakNext();
+  }, []);
 
   return { announce };
 }
