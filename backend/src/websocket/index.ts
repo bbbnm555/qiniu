@@ -1,4 +1,5 @@
-import { WebSocketServer, type Server as HTTPServer } from "ws";
+import { WebSocketServer } from "ws";
+import type { Server as HTTPServer } from "node:http";
 import {
   handleConnection,
   handleMessage,

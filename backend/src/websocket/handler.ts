@@ -14,7 +14,19 @@ import type {
   QueryCancelPayload,
   SettingsUpdatePayload,
 } from "./protocol.js";
+import { visionService } from "../services/ai/visionService.js";
+import { ContextService } from "../services/ai/contextService.js";
 import { logger } from "../utils/logger.js";
+
+// 每个 session 持有独立的对话上下文
+const sessionContexts = new Map<string, ContextService>();
+
+function getContext(sessionId: string): ContextService {
+  if (!sessionContexts.has(sessionId)) {
+    sessionContexts.set(sessionId, new ContextService());
+  }
+  return sessionContexts.get(sessionId)!;
+}
 
 type MessageHandler = (
   session: Session,
@@ -33,25 +45,71 @@ handlers.set(CLIENT_EVENTS.USER_QUERY, async (session, payload) => {
   );
 
   session.activeQueryId = data.query_id;
+  const context = getContext(session.id);
 
-  // TODO: Task-08 集成 visionService
+  // 保存用户消息到上下文
+  context.addUserMessage(data.text);
+
   sendToClient(session.ws, SERVER_EVENTS.STATUS, {
     status: "thinking",
     message: "正在分析...",
   });
 
-  // 占位：模拟响应
-  sendToClient(session.ws, SERVER_EVENTS.RESPONSE_TEXT, {
-    query_id: data.query_id,
-    text: "视觉理解服务即将上线，请先完成 AI 服务配置。",
-    is_final: true,
-  });
+  try {
+    // 使用传入的帧或 session 中缓存的 latestFrame
+    const imageFrame = data.image_frame || session.latestFrame;
 
-  sendToClient(session.ws, SERVER_EVENTS.STATUS, {
-    status: "idle",
-  });
+    if (!imageFrame) {
+      sendToClient(session.ws, SERVER_EVENTS.RESPONSE_TEXT, {
+        query_id: data.query_id,
+        text: "暂未收到摄像头画面，请先开启摄像头再提问。",
+        is_final: true,
+      });
+      sendToClient(session.ws, SERVER_EVENTS.STATUS, { status: "idle" });
+      session.activeQueryId = null;
+      return;
+    }
 
-  session.activeQueryId = null;
+    // 调用视觉 AI 服务（流式）
+    let fullAnswer = "";
+    for await (const sentence of visionService.analyze({
+      imageBase64: imageFrame,
+      question: data.text,
+      context: context.getContext(),
+    })) {
+      fullAnswer += sentence;
+
+      sendToClient(session.ws, SERVER_EVENTS.RESPONSE_TEXT, {
+        query_id: data.query_id,
+        text: sentence,
+        is_final: false,
+      });
+    }
+
+    // 发送结束标记
+    sendToClient(session.ws, SERVER_EVENTS.RESPONSE_TEXT, {
+      query_id: data.query_id,
+      text: "",
+      is_final: true,
+    });
+
+    // 保存 AI 回答到上下文
+    if (fullAnswer) {
+      context.addAssistantMessage(fullAnswer);
+    }
+
+    sendToClient(session.ws, SERVER_EVENTS.STATUS, {
+      status: "speaking",
+    });
+  } catch (err) {
+    logger.error({ err, sessionId: session.id }, "AI 处理出错");
+    sendToClient(session.ws, SERVER_EVENTS.ERROR, {
+      code: "AI_ERROR",
+      message: "AI 处理出错，请重试",
+    });
+  } finally {
+    session.activeQueryId = null;
+  }
 });
 
 handlers.set(CLIENT_EVENTS.FRAME_UPDATE, (session, payload) => {
@@ -66,7 +124,7 @@ handlers.set(CLIENT_EVENTS.QUERY_CANCEL, (session, payload) => {
     "🛑 查询已取消",
   );
 
-  // TODO: Task-08 abort AI 调用
+  visionService.cancel(data.query_id);
   session.activeQueryId = null;
 
   sendToClient(session.ws, SERVER_EVENTS.STATUS, {
