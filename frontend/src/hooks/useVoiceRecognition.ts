@@ -43,7 +43,7 @@ export function useVoiceRecognition(
     recognitionRef.current = recognition;
     transcriptRef.current = "";
 
-    recognition.continuous = false;
+    recognition.continuous = true; // 持续监听，直到手动 stop
     recognition.interimResults = true;
     recognition.lang = "zh-CN";
     recognition.maxAlternatives = 1;
