@@ -1,11 +1,14 @@
 .bubble {
   display: flex;
+  align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
+  padding: 10px 16px;
   margin-bottom: var(--space-sm);
   border-radius: 22px;
-  max-width: 92%;
+  max-width: 85%;
+  cursor: pointer;
   animation: fadeIn 0.3s ease-out;
+  transition: all var(--transition-fast);
 }
 
 @keyframes fadeIn {
@@ -22,21 +25,27 @@
 .user {
   align-self: flex-end;
   flex-direction: row-reverse;
-  background: rgba(212, 168, 83, 0.12);
-  border: 1px solid rgba(212, 168, 83, 0.15);
+  background: rgba(212, 168, 83, 0.1);
+  border: 1px solid rgba(212, 168, 83, 0.2);
+}
+.user:hover {
+  background: rgba(212, 168, 83, 0.16);
 }
 
 .assistant {
   align-self: flex-start;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+.assistant:hover {
+  background: rgba(255, 255, 255, 0.07);
 }
 
 .avatar {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -44,43 +53,74 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-.content {
+/* 语音波形条 */
+.waveform {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 2px;
-  min-width: 0;
+  height: 32px;
+  flex: 1;
+  min-width: 60px;
 }
 
-.text {
-  font-size: var(--font-size-sm);
-  line-height: 1.6;
-  word-break: break-word;
-  color: var(--color-fg);
+.bar {
+  width: 3px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.user .bar {
+  background: var(--color-accent);
+  opacity: 0.7;
+}
+.assistant .bar {
+  background: var(--color-info);
+  opacity: 0.7;
+}
+
+/* 播放状态 */
+.playing .bar {
+  animation: voicePlay 0.4s ease-in-out infinite alternate;
+}
+@keyframes voicePlay {
+  0% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .meta {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   font-size: 0.65rem;
   color: var(--color-fg-muted);
+  flex-shrink: 0;
+}
+
+.duration {
+  font-family: var(--font-mono);
 }
 
 .time {
   font-family: var(--font-mono);
+  opacity: 0.5;
 }
 
-.replayBtn {
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 12px;
-  color: var(--color-fg-muted);
-  padding: 1px 10px;
-  font-size: 0.65rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
+.playIcon {
+  font-size: 0.9rem;
 }
-.replayBtn:hover {
-  color: var(--color-accent);
-  border-color: rgba(212, 168, 83, 0.3);
+
+/* 隐藏的文字（屏幕阅读器可用） */
+.srText {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
