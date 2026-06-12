@@ -1,22 +1,25 @@
 import { create } from "zustand";
 
 export type TTSEngine = "browser" | "cosyvoice";
+export type InputMode = "wake" | "push";
 
 interface SettingsState {
   ttsSpeed: number;
   ttsVolume: number;
   ttsEngine: TTSEngine;
+  inputMode: InputMode;
   theme: "normal" | "dark" | "high-contrast";
 
   setTTSSpeed: (v: number) => void;
   setTTSVolume: (v: number) => void;
   setTTSEngine: (e: TTSEngine) => void;
+  setInputMode: (m: InputMode) => void;
   setTheme: (t: SettingsState["theme"]) => void;
 }
 
 function loadInitial(): Pick<
   SettingsState,
-  "ttsSpeed" | "ttsVolume" | "ttsEngine" | "theme"
+  "ttsSpeed" | "ttsVolume" | "ttsEngine" | "inputMode" | "theme"
 > {
   try {
     const saved = localStorage.getItem("ai-vision-settings");
@@ -26,6 +29,7 @@ function loadInitial(): Pick<
     ttsSpeed: 1.0,
     ttsVolume: 1.0,
     ttsEngine: "cosyvoice",
+    inputMode: "wake",
     theme: "normal",
   };
 }
@@ -47,6 +51,10 @@ export const useSettingsStore = create<SettingsState>((set) => ({
     set({ ttsEngine: e });
     persist();
   },
+  setInputMode: (m) => {
+    set({ inputMode: m });
+    persist();
+  },
   setTheme: (t) => {
     set({ theme: t });
     document.documentElement.setAttribute("data-theme", t);
@@ -62,6 +70,7 @@ function persist() {
       ttsSpeed: state.ttsSpeed,
       ttsVolume: state.ttsVolume,
       ttsEngine: state.ttsEngine,
+      inputMode: state.inputMode,
       theme: state.theme,
     }),
   );

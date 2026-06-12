@@ -1,12 +1,11 @@
-import { useCallback, useRef } from "react";
-
 const queueRef: string[] = [];
 let speaking = false;
+let lastMsg = "";
+let lastMsgTime = 0;
 
 function speakNext() {
   if (speaking || queueRef.length === 0) return;
   if (!window.speechSynthesis) return;
-
   const text = queueRef.shift()!;
   speaking = true;
   const utter = new SpeechSynthesisUtterance(text);
@@ -25,10 +24,15 @@ function speakNext() {
 }
 
 /**
- * 语音反馈 — 始终用浏览器 SpeechSynthesis，保证 100% 可靠
+ * 语音反馈 — 相同消息 3 秒内不重复
  */
 export function useAudioFeedback() {
-  const announce = useCallback((message: string, interrupt = false) => {
+  const announce = (message: string, interrupt = false) => {
+    const now = Date.now();
+    if (message === lastMsg && now - lastMsgTime < 3000) return;
+    lastMsg = message;
+    lastMsgTime = now;
+
     if (interrupt) {
       window.speechSynthesis?.cancel();
       queueRef.length = 0;
@@ -36,7 +40,7 @@ export function useAudioFeedback() {
     }
     queueRef.push(message);
     speakNext();
-  }, []);
+  };
 
   return { announce };
 }

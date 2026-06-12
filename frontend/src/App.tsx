@@ -68,14 +68,18 @@ function HomePage() {
     clearHistory,
   } = useConversationStore();
 
-  const { ttsEngine } = useSettingsStore();
+  const { ttsEngine, inputMode } = useSettingsStore();
   useAudioOutput(ttsEngine);
   const { announce } = useAudioFeedback();
 
-  // WS 连接状态 → 语音提示（仅播一次）
+  // WS 连接状态 → 语音提示
   useEffect(() => {
     if (status === "connected") {
-      announce("连接成功", true);
+      const hint =
+        inputMode === "wake"
+          ? "连接成功，说你好V T唤醒我"
+          : "连接成功，按住T键说话";
+      announce(hint, true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -90,7 +94,50 @@ function HomePage() {
     }, 800);
   }, [announce, startCamera]);
 
-  useWakeWord(handleWake);
+  // 唤醒后自动提交的语音查询
+  const handleVoiceResult = useCallback(
+    (text: string) => {
+      setError(null);
+      if (activeQueryId && isProcessing)
+        send(WS_EVENTS.QUERY_CANCEL, { query_id: activeQueryId });
+      const queryId = crypto.randomUUID();
+      setActiveQueryId(queryId);
+      addMessage({
+        id: crypto.randomUUID(),
+        role: "user",
+        content: text,
+        timestamp: Date.now(),
+        queryId,
+      });
+      send(WS_EVENTS.USER_QUERY, { query_id: queryId, text });
+      setIsProcessing(true);
+    },
+    [
+      send,
+      addMessage,
+      setIsProcessing,
+      setActiveQueryId,
+      setError,
+      activeQueryId,
+      isProcessing,
+    ],
+  );
+
+  // 语音唤醒：wake 模式 → 唤醒+自动问答；push 模式 → 仅唤醒开摄像头
+  useWakeWord({
+    onWake: handleWake,
+    onQuery: handleVoiceResult,
+    enabled: inputMode === "wake",
+  });
+
+  // wake 模式下：唤醒后自动进入语音问答（不用按 T）
+  const {
+    transcript,
+    isListening,
+    isSupported: voiceSupported,
+    start: startVoice,
+    stop: stopVoice,
+  } = useVoiceRecognition(handleVoiceResult);
 
   useEffect(() => {
     send(WS_EVENTS.SETTINGS_UPDATE, { tts_engine: ttsEngine });
@@ -142,43 +189,9 @@ function HomePage() {
     messages,
   ]);
 
-  const handleVoiceResult = useCallback(
-    (text: string) => {
-      setError(null);
-      if (activeQueryId && isProcessing)
-        send(WS_EVENTS.QUERY_CANCEL, { query_id: activeQueryId });
-      const queryId = crypto.randomUUID();
-      setActiveQueryId(queryId);
-      addMessage({
-        id: crypto.randomUUID(),
-        role: "user",
-        content: text,
-        timestamp: Date.now(),
-        queryId,
-      });
-      send(WS_EVENTS.USER_QUERY, { query_id: queryId, text });
-      setIsProcessing(true);
-    },
-    [
-      send,
-      addMessage,
-      setIsProcessing,
-      setActiveQueryId,
-      setError,
-      activeQueryId,
-      isProcessing,
-    ],
-  );
-
-  const {
-    transcript,
-    isListening,
-    isSupported: voiceSupported,
-    start: startVoice,
-    stop: stopVoice,
-  } = useVoiceRecognition(handleVoiceResult);
-
+  // push 模式：按住 T 键说话
   useEffect(() => {
+    if (inputMode !== "push") return;
     const onKeyDown = (e: KeyboardEvent) => {
       if ((e.key === "t" || e.key === "T") && !e.repeat) {
         e.preventDefault();
@@ -307,7 +320,15 @@ function HomePage() {
             </p>
           )}
           <p className={styles.hint}>
-            按住 <kbd className={styles.key}>T</kbd> 键说话 · 松开停止
+            {inputMode === "push" ? (
+              <>
+                按住 <kbd className={styles.key}>T</kbd> 键说话 · 松开停止
+              </>
+            ) : (
+              <>
+                说 <kbd className={styles.key}>你好VT</kbd> 唤醒 · 然后直接提问
+              </>
+            )}
           </p>
           {!voiceSupported && (
             <p className={styles.unsupported}>⚠ 请使用 Chrome 或 Edge 浏览器</p>
@@ -323,10 +344,12 @@ function SettingsPage() {
     ttsSpeed,
     ttsVolume,
     ttsEngine,
+    inputMode,
     theme,
     setTTSSpeed,
     setTTSVolume,
     setTTSEngine,
+    setInputMode,
     setTheme,
   } = useSettingsStore();
 
@@ -369,6 +392,26 @@ function SettingsPage() {
           aria-label="语音合成音量"
         />
       </div>
+
+      <fieldset className={styles.themeGroup}>
+        <legend className={styles.themeLegend}>麦克风模式</legend>
+        {[
+          { value: "wake" as const, label: "常开（语音唤醒）" },
+          { value: "push" as const, label: "按键触发（按住 T）" },
+        ].map((opt) => (
+          <label key={opt.value} className={styles.radioRow}>
+            <input
+              type="radio"
+              name="inputMode"
+              value={opt.value}
+              checked={inputMode === opt.value}
+              onChange={() => setInputMode(opt.value)}
+              className={styles.radio}
+            />
+            {opt.label}
+          </label>
+        ))}
+      </fieldset>
 
       <fieldset className={styles.themeGroup}>
         <legend className={styles.themeLegend}>语音引擎</legend>
