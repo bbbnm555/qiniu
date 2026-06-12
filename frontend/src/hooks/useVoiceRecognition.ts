@@ -1,6 +1,5 @@
 import { useState, useRef, useCallback } from "react";
 
-/** 最长录音时长（秒） */
 const MAX_RECORD_SECONDS = 30;
 
 interface VoiceRecognitionResult {
@@ -11,13 +10,6 @@ interface VoiceRecognitionResult {
   stop: () => void;
 }
 
-/**
- * 浏览器原生语音识别 Hook
- *
- * 基于 Web Speech API (SpeechRecognition)
- * - Chrome/Edge 支持良好，Firefox 不支持
- * - 不支持时降级为后端 ASR（通过 AudioRecorder + WS）
- */
 export function useVoiceRecognition(
   onResult: (text: string) => void,
 ): VoiceRecognitionResult {
@@ -25,16 +17,23 @@ export function useVoiceRecognition(
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const transcriptRef = useRef(""); // 避免闭包捕获旧值
+  const onResultRef = useRef(onResult); // 避免 onResult 变化导致重建
+  onResultRef.current = onResult;
 
   const isSupported =
     typeof window !== "undefined" &&
     ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
 
-  const start = useCallback(() => {
-    if (!isSupported) {
-      console.warn("浏览器不支持 SpeechRecognition，请使用后端 ASR 降级方案");
-      return;
+  const clearTimer = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
     }
+  };
+
+  const start = useCallback(() => {
+    if (!isSupported) return;
 
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -42,10 +41,10 @@ export function useVoiceRecognition(
 
     const recognition = new SpeechRecognition();
     recognitionRef.current = recognition;
+    transcriptRef.current = "";
 
-    // 配置
-    recognition.continuous = false; // 单次识别（一句话说完即结束）
-    recognition.interimResults = true; // 显示中间结果（给用户实时反馈）
+    recognition.continuous = false;
+    recognition.interimResults = true;
     recognition.lang = "zh-CN";
     recognition.maxAlternatives = 1;
 
@@ -53,23 +52,24 @@ export function useVoiceRecognition(
       const text = Array.from(event.results)
         .map((r) => r[0].transcript)
         .join("");
+      transcriptRef.current = text;
       setTranscript(text);
     };
 
-    recognition.onerror = (event) => {
-      console.error("语音识别错误:", event.error, event.message);
+    recognition.onerror = () => {
+      clearTimer();
       setIsListening(false);
     };
 
     recognition.onend = () => {
+      clearTimer();
       setIsListening(false);
-      // 识别结束，提交结果
-      if (transcript.trim()) {
-        onResult(transcript.trim());
+      const text = transcriptRef.current.trim();
+      if (text) {
+        onResultRef.current(text);
       }
     };
 
-    // 30 秒自动停止
     timeoutRef.current = setTimeout(() => {
       recognitionRef.current?.stop();
     }, MAX_RECORD_SECONDS * 1000);
@@ -77,22 +77,13 @@ export function useVoiceRecognition(
     recognition.start();
     setIsListening(true);
     setTranscript("");
-  }, [isSupported, onResult, transcript]);
+  }, [isSupported]);
 
   const stop = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
+    clearTimer();
     recognitionRef.current?.stop();
     setIsListening(false);
   }, []);
 
-  return {
-    transcript,
-    isListening,
-    isSupported,
-    start,
-    stop,
-  };
+  return { transcript, isListening, isSupported, start, stop };
 }
