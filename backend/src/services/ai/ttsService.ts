@@ -70,7 +70,7 @@ export class TTSService {
     return { buffer, format: "mp3" };
   }
 
-  /** 阿里云 DashScope TTS（返回 JSON 含 base64 音频） */
+  /** 阿里云 DashScope TTS（cosyvoice-v3-flash） */
   private async synthesizeDashScope(
     text: string,
     options?: { speed?: number; voice?: string },
@@ -84,12 +84,12 @@ export class TTSService {
         Authorization: `Bearer ${env.TTS_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "cosyvoice-v1",
-        input: { text },
-        parameters: {
-          voice: options?.voice || env.TTS_VOICE || "longxiaochun",
+        model: "cosyvoice-v3-flash",
+        input: {
+          text,
+          voice: options?.voice || env.TTS_VOICE || "longanyang",
           format: "mp3",
-          sample_rate: 48000,
+          sample_rate: 24000,
           rate: options?.speed || 1.0,
         },
       }),
@@ -98,23 +98,36 @@ export class TTSService {
     if (!response.ok) {
       const errText = await response.text().catch(() => "无法读取错误");
       logger.error(
-        { status: response.status, body: errText },
+        { status: response.status, body: errText.slice(0, 300) },
         "DashScope TTS 请求失败",
       );
       return null;
     }
 
     const data = await response.json();
-    const audioBase64 = data?.output?.audio;
-    if (!audioBase64) {
-      logger.error("DashScope TTS 响应缺少音频数据");
-      return null;
+
+    // 优先从 base64 data 获取，否则从 url 下载
+    const audioBase64 = data?.output?.audio?.data;
+    const audioUrl = data?.output?.audio?.url;
+
+    if (audioBase64) {
+      const buffer = Buffer.from(audioBase64, "base64").buffer as ArrayBuffer;
+      this.cacheIfRoom(cacheKey(text, options), buffer);
+      return { buffer, format: "mp3" };
     }
 
-    // 解码 base64 → Buffer
-    const buffer = Buffer.from(audioBase64, "base64").buffer as ArrayBuffer;
-    this.cacheIfRoom(cacheKey(text, options), buffer);
-    return { buffer, format: "mp3" };
+    if (audioUrl) {
+      const audioResp = await fetch(audioUrl);
+      const buffer = await audioResp.arrayBuffer();
+      this.cacheIfRoom(cacheKey(text, options), buffer);
+      return { buffer, format: "mp3" };
+    }
+
+    logger.error(
+      { response: JSON.stringify(data).slice(0, 200) },
+      "TTS 响应无音频",
+    );
+    return null;
   }
 
   private cacheIfRoom(key: string, buffer: ArrayBuffer): void {
