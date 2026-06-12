@@ -19,6 +19,28 @@ import {
 } from "./services/websocket/messageTypes";
 import styles from "./App.module.css";
 
+const inputStyle: React.CSSProperties = {
+  flex: 1,
+  padding: "8px 14px",
+  borderRadius: "20px",
+  border: "1px solid var(--color-border-light)",
+  background: "var(--color-bg-surface)",
+  color: "var(--color-fg)",
+  fontSize: "0.85rem",
+  outline: "none",
+};
+
+const sendBtnStyle: React.CSSProperties = {
+  padding: "8px 18px",
+  borderRadius: "20px",
+  border: "1px solid var(--color-accent)",
+  background: "rgba(212,168,83,0.1)",
+  color: "var(--color-accent)",
+  cursor: "pointer",
+  fontWeight: 500,
+  fontSize: "0.85rem",
+};
+
 function HomePage() {
   const { send, subscribe } = useWebSocket();
   const { status, latency } = useConnectionStore();
@@ -47,7 +69,6 @@ function HomePage() {
   const { ttsEngine } = useSettingsStore();
   useAudioOutput(ttsEngine);
 
-  // 引擎切换同步到后端
   useEffect(() => {
     send(WS_EVENTS.SETTINGS_UPDATE, { tts_engine: ttsEngine });
   }, [ttsEngine, send]);
@@ -100,11 +121,9 @@ function HomePage() {
 
   const handleVoiceResult = useCallback(
     (text: string) => {
-      console.log("[Voice] 识别结果:", text);
       setError(null);
-      if (activeQueryId && isProcessing) {
+      if (activeQueryId && isProcessing)
         send(WS_EVENTS.QUERY_CANCEL, { query_id: activeQueryId });
-      }
       const queryId = crypto.randomUUID();
       setActiveQueryId(queryId);
       addMessage({
@@ -114,7 +133,6 @@ function HomePage() {
         timestamp: Date.now(),
         queryId,
       });
-      console.log("[Voice] 发送 user.query, queryId:", queryId);
       send(WS_EVENTS.USER_QUERY, { query_id: queryId, text });
       setIsProcessing(true);
     },
@@ -195,13 +213,36 @@ function HomePage() {
         />
       </div>
 
+      {/* 文字输入 — 摄像头与按钮之间 */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const inp = (e.target as HTMLFormElement).querySelector("input");
+          if (inp?.value.trim()) {
+            handleVoiceResult(inp.value.trim());
+            inp.value = "";
+          }
+        }}
+        style={{
+          display: "flex",
+          gap: "0.5rem",
+          width: "100%",
+          maxWidth: 560,
+          flexShrink: 0,
+        }}
+      >
+        <input type="text" placeholder="输入文字提问..." style={inputStyle} />
+        <button type="submit" style={sendBtnStyle}>
+          发送
+        </button>
+      </form>
+
       <div className={styles.bottomArea}>
         <div className={styles.controls}>
           <VoiceIndicator
             status={voiceStatus as never}
             transcript={transcript}
           />
-
           <div className={styles.buttonRow}>
             <IconButton
               label={isCapturing ? "关闭摄像头" : "打开摄像头"}
@@ -212,7 +253,6 @@ function HomePage() {
                 isCapturing ? stopCamera() : startCamera().catch(() => {});
               }}
             />
-
             <IconButton
               label={isListening ? "正在听取..." : "按住说话"}
               icon="🎤"
@@ -246,57 +286,6 @@ function HomePage() {
           <p className={styles.hint}>
             按住 <kbd className={styles.key}>T</kbd> 键说话 · 松开停止
           </p>
-
-          {/* 调试：文本输入框 */}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const input = (e.target as HTMLFormElement).querySelector(
-                "input",
-              );
-              if (input?.value.trim()) {
-                handleVoiceResult(input.value.trim());
-                input.value = "";
-              }
-            }}
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              width: "100%",
-              maxWidth: 420,
-            }}
-          >
-            <input
-              type="text"
-              placeholder="或在此输入文字测试..."
-              style={{
-                flex: 1,
-                padding: "8px 14px",
-                borderRadius: "20px",
-                border: "1px solid var(--color-border-light)",
-                background: "var(--color-bg-surface)",
-                color: "var(--color-fg)",
-                fontSize: "0.85rem",
-                outline: "none",
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                padding: "8px 18px",
-                borderRadius: "20px",
-                border: "1px solid var(--color-accent)",
-                background: "rgba(212,168,83,0.1)",
-                color: "var(--color-accent)",
-                cursor: "pointer",
-                fontWeight: 500,
-                fontSize: "0.85rem",
-              }}
-            >
-              发送
-            </button>
-          </form>
-
           {!voiceSupported && (
             <p className={styles.unsupported}>⚠ 请使用 Chrome 或 Edge 浏览器</p>
           )}
