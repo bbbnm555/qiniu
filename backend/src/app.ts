@@ -6,6 +6,7 @@ import { requestLogger } from "./middleware/logger.js";
 import { rateLimiter } from "./middleware/rateLimiter.js";
 import { securityHeaders } from "./middleware/security.js";
 import { healthRouter } from "./routes/health.js";
+import { uploadRouter } from "./routes/upload.js";
 
 export function createApp(): express.Application {
   const app = express();
@@ -28,6 +29,7 @@ export function createApp(): express.Application {
 
   // 路由
   app.use("/api", healthRouter);
+  app.use("/api", uploadRouter);
 
   // 全局错误处理（必须最后注册）
   app.use(errorHandler);
