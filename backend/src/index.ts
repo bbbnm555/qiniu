@@ -3,9 +3,19 @@ dotenv.config();
 
 import { createServer } from "http";
 import { createApp } from "./app.js";
+import { loadEnv } from "./config/env.js";
 import { logger } from "./utils/logger.js";
 
-const PORT = parseInt(process.env.PORT || "3001", 10);
+// 启动时校验环境变量
+try {
+  loadEnv();
+  logger.info("✅ 环境变量校验通过");
+} catch (err) {
+  logger.fatal({ err }, "环境变量校验失败");
+  process.exit(1);
+}
+
+const { PORT } = loadEnv();
 
 const app = createApp();
 const server = createServer(app);
