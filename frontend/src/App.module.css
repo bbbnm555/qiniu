@@ -19,11 +19,9 @@
 
 .mainArea {
   display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  width: 100%;
-  max-width: 640px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
   flex: 1;
   min-height: 0;
 }

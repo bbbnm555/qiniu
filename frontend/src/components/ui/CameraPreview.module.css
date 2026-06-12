@@ -1,7 +1,7 @@
 .container {
   width: 100%;
-  max-width: 480px;
-  height: 280px;
+  max-width: 560px;
+  aspect-ratio: 4 / 3;
   flex-shrink: 0;
   border-radius: var(--radius-lg);
   overflow: hidden;
