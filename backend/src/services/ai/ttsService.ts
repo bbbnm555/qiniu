@@ -89,8 +89,8 @@ export class TTSService {
         parameters: {
           voice: options?.voice || env.TTS_VOICE || "longxiaochun",
           format: "mp3",
-          sample_rate: 24000,
-          speech_rate: options?.speed || 1.0,
+          sample_rate: 48000,
+          rate: options?.speed || 1.0,
         },
       }),
     });
