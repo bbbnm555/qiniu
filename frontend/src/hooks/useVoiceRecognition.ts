@@ -18,6 +18,7 @@ export function useVoiceRecognition(
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const transcriptRef = useRef("");
+  const listeningRef = useRef(false); // 真正的"用户还在按着键"标记
   const onResultRef = useRef(onResult);
   onResultRef.current = onResult;
 
@@ -32,40 +33,14 @@ export function useVoiceRecognition(
     }
   };
 
-  const stop = useCallback(() => {
-    clearTimer();
-    const rec = recognitionRef.current;
-    if (rec) {
-      recognitionRef.current = null;
-      rec.stop();
-    }
-    setIsListening(false);
-    // 提交累积的识别文本
-    const text = transcriptRef.current.trim();
-    if (text) {
-      onResultRef.current(text);
-      transcriptRef.current = "";
-    }
-  }, []);
-
-  const start = useCallback(() => {
-    if (!isSupported) return;
-
+  /** 创建并启动一个 recognition 实例 */
+  const createRecognition = useCallback(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
-    clearTimer();
-    // 如果已有旧实例，先停掉
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-    }
-
     const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    transcriptRef.current = "";
-
-    recognition.continuous = true;
+    recognition.continuous = false; // 说一句话就停，然后我们在 onend 重启
     recognition.interimResults = true;
     recognition.lang = "zh-CN";
     recognition.maxAlternatives = 1;
@@ -74,40 +49,55 @@ export function useVoiceRecognition(
       const text = Array.from(event.results)
         .map((r) => r[0].transcript)
         .join("");
-      transcriptRef.current = text;
-      setTranscript(text);
+      transcriptRef.current = transcriptRef.current
+        ? transcriptRef.current + text
+        : text;
+      setTranscript(transcriptRef.current);
     };
 
-    // 所有错误都不改变 isListening，只有手动 stop 才停
-    recognition.onerror = (event) => {
-      console.warn("语音识别错误:", event.error);
-      // no-speech / aborted 等错误忽略，不关闭按钮
+    recognition.onerror = () => {
+      // 忽略错误，onend 会处理重启
     };
 
-    // onend 只做清理，不改 isListening（由 stop() 管理状态）
     recognition.onend = () => {
-      // 如果 recognition 实例还在 ref 中（未被 stop 清掉），说明是异常结束
-      // 此时自动重启
-      if (recognitionRef.current === recognition) {
-        try {
-          recognition.start();
-        } catch {
-          // 无法重启，放弃
-          recognitionRef.current = null;
-          clearTimer();
-          setIsListening(false);
-        }
+      // 用户还在按着键 → 重启一个新的 recognition
+      if (listeningRef.current) {
+        createRecognition();
       }
     };
+
+    recognition.start();
+    recognitionRef.current = recognition;
+  }, []);
+
+  const start = useCallback(() => {
+    if (!isSupported) return;
+    clearTimer();
+    listeningRef.current = true;
+    transcriptRef.current = "";
+    setTranscript("");
+    setIsListening(true);
+    createRecognition();
 
     timeoutRef.current = setTimeout(() => {
       stop();
     }, MAX_RECORD_SECONDS * 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSupported, createRecognition]);
 
-    recognition.start();
-    setIsListening(true);
-    setTranscript("");
-  }, [isSupported, stop]);
+  const stop = useCallback(() => {
+    clearTimer();
+    listeningRef.current = false;
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
+
+    const text = transcriptRef.current.trim();
+    if (text) {
+      onResultRef.current(text);
+      transcriptRef.current = "";
+    }
+  }, []);
 
   return { transcript, isListening, isSupported, start, stop };
 }
