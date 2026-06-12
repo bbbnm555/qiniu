@@ -1,0 +1,52 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  font-size: 0.85rem;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dotConnected {
+  background: var(--color-success);
+  box-shadow: 0 0 6px var(--color-success);
+}
+
+.dotConnecting,
+.dotReconnecting {
+  background: var(--color-warning);
+  animation: blink 0.8s ease-in-out infinite;
+}
+
+.dotDisconnected {
+  background: var(--color-danger);
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.label {
+  color: var(--color-fg-secondary);
+}
+
+.latency {
+  color: var(--color-fg-secondary);
+  font-size: 0.75rem;
+  opacity: 0.7;
+}

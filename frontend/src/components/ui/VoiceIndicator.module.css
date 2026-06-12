@@ -1,0 +1,95 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.waveform {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 40px;
+}
+
+.bar {
+  width: 6px;
+  border-radius: 3px;
+  background: var(--color-primary);
+  animation: wave 0.6s ease-in-out infinite alternate;
+}
+
+.bar.listening {
+  background: var(--color-danger);
+  animation-name: waveListening;
+}
+
+.bar.processing {
+  background: var(--color-warning);
+  animation-name: wavePulse;
+}
+
+.bar.speaking {
+  background: var(--color-success);
+  animation-name: waveSpeaking;
+}
+
+@keyframes wave {
+  from {
+    height: 8px;
+  }
+  to {
+    height: 32px;
+  }
+}
+
+@keyframes waveListening {
+  0%,
+  100% {
+    height: 4px;
+  }
+  50% {
+    height: 36px;
+  }
+}
+
+@keyframes wavePulse {
+  0%,
+  100% {
+    height: 16px;
+  }
+  50% {
+    height: 32px;
+  }
+}
+
+@keyframes waveSpeaking {
+  0%,
+  100% {
+    height: 32px;
+  }
+  50% {
+    height: 8px;
+  }
+}
+
+.label {
+  font-size: 1rem;
+  color: var(--color-fg-secondary);
+  font-weight: 500;
+}
+
+.transcript {
+  font-size: 0.9rem;
+  color: var(--color-fg);
+  font-style: italic;
+  max-width: 300px;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
