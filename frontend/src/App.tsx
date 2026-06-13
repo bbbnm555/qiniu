@@ -90,13 +90,18 @@ function HomePage() {
 
   // 语音唤醒：你好VT → 自动开启摄像头
   const handleWake = useCallback(() => {
+    if (isCapturing) {
+      // 摄像头已在运行，直接提示提问
+      announce("你好，请提问", true);
+      return;
+    }
     announce("你好，正在为您开启摄像头", true);
     setTimeout(() => {
       startCamera()
         .then(() => announce("摄像头已开启，请提问"))
         .catch(() => announce("摄像头开启失败"));
     }, 800);
-  }, [announce, startCamera]);
+  }, [announce, startCamera, isCapturing]);
 
   // 唤醒后自动提交的语音查询
   const handleVoiceResult = useCallback(
@@ -128,7 +133,7 @@ function HomePage() {
   );
 
   // 语音唤醒：wake 模式 → 唤醒+自动问答；push 模式 → 仅唤醒开摄像头
-  useWakeWord({
+  const { isListening: wakeListening } = useWakeWord({
     onWake: handleWake,
     onQuery: handleVoiceResult,
     enabled: inputMode === "wake",
@@ -142,6 +147,14 @@ function HomePage() {
     start: startVoice,
     stop: stopVoice,
   } = useVoiceRecognition(handleVoiceResult);
+
+  // 首次启动时自动开启摄像头（wake 模式下），确保唤醒后立即有画面
+  useEffect(() => {
+    if (inputMode === "wake" && !isCapturing) {
+      startCamera().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     send(WS_EVENTS.SETTINGS_UPDATE, { tts_engine: ttsEngine });
@@ -220,7 +233,9 @@ function HomePage() {
     ? "listening"
     : isProcessing
       ? "processing"
-      : "idle";
+      : wakeListening
+        ? "wake"
+        : "idle";
 
   return (
     <div className={styles.page}>

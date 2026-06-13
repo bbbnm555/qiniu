@@ -46,6 +46,25 @@
   }
 }
 
+/* wake — 等待唤醒词（柔和绿呼吸） */
+.bar.wake {
+  background: var(--color-success);
+  animation: wakeBreathe 2.2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(45, 107, 79, 0.2);
+}
+
+@keyframes wakeBreathe {
+  0%,
+  100% {
+    height: 8px;
+    opacity: 0.35;
+  }
+  50% {
+    height: 28px;
+    opacity: 0.75;
+  }
+}
+
 /* listening — 活跃跳动（红色脉动） */
 .bar.listening {
   background: var(--color-danger);
@@ -121,6 +140,10 @@
 @media (prefers-reduced-motion: reduce) {
   .bar {
     animation: none;
+  }
+  .bar.wake {
+    height: 20px;
+    opacity: 0.6;
   }
   .bar.listening {
     height: 36px;
