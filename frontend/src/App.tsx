@@ -23,24 +23,28 @@ import styles from "./App.module.css";
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
-  padding: "8px 14px",
-  borderRadius: "20px",
-  border: "1px solid var(--color-border-light)",
-  background: "var(--color-bg-surface)",
+  padding: "14px 20px",
+  borderRadius: "28px",
+  border: "2px solid var(--color-border)",
+  background: "var(--color-bg-elevated)",
   color: "var(--color-fg)",
-  fontSize: "0.85rem",
+  fontSize: "1.125rem",
   outline: "none",
+  fontFamily: "var(--font-sans)",
+  minHeight: "56px",
 };
 
 const sendBtnStyle: React.CSSProperties = {
-  padding: "8px 18px",
-  borderRadius: "20px",
-  border: "1px solid var(--color-accent)",
-  background: "rgba(212,168,83,0.1)",
-  color: "var(--color-accent)",
+  padding: "14px 28px",
+  borderRadius: "28px",
+  border: "2px solid var(--color-accent)",
+  background: "var(--color-accent)",
+  color: "#fff",
   cursor: "pointer",
-  fontWeight: 500,
-  fontSize: "0.85rem",
+  fontWeight: 600,
+  fontSize: "1.125rem",
+  minHeight: "56px",
+  whiteSpace: "nowrap",
 };
 
 function HomePage() {
@@ -261,9 +265,9 @@ function HomePage() {
         }}
         style={{
           display: "flex",
-          gap: "0.5rem",
+          gap: "0.75rem",
           width: "100%",
-          maxWidth: 560,
+          maxWidth: 640,
           flexShrink: 0,
         }}
       >
@@ -312,8 +316,9 @@ function HomePage() {
             <p
               style={{
                 color: "var(--color-accent)",
-                fontSize: "0.9rem",
+                fontSize: "1.125rem",
                 margin: 0,
+                fontWeight: 500,
               }}
             >
               "{transcript}"
