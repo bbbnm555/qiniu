@@ -1,57 +1,27 @@
 /* ===========================================
-   移动端适配
+   VisionTalk — 移动端适配
+   触控优先 · 大元素 · 全屏可用
    =========================================== */
 
 @media (max-width: 768px) {
   html {
-    font-size: 110%;
-  }
-
-  /* 面板填满 */
-  [class*="ConversationPanel_panel"] {
-    max-width: 100%;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    height: calc(100vh - 260px);
-    max-height: none;
-  }
-
-  [class*="MessageBubble_bubble"] {
-    max-width: 94%;
-  }
-
-  [class*="CameraPreview_container"] {
-    width: 100px;
-    height: 75px;
-    bottom: 110px;
-    right: 10px;
-  }
-
-  [class*="AppShell_header"] {
-    padding: var(--space-sm) var(--space-md);
+    font-size: 100%; /* 16px 基准 — 小屏稍调回 */
   }
 }
 
 @media (max-width: 480px) {
-  [class*="ConversationPanel_panel"] {
-    height: calc(100vh - 230px);
-  }
-
-  [class*="buttonRow"] {
-    gap: var(--space-sm);
+  /* 小屏手机 — 进一步压缩 */
+  :root {
+    --space-xl: 16px;
+    --space-2xl: 24px;
+    --space-3xl: 32px;
   }
 }
 
-/* 横屏 */
+/* 横屏 — 摄像头区域缩小 */
 @media (orientation: landscape) and (max-height: 600px) {
-  [class*="ConversationPanel_panel"] {
-    height: 45vh;
-    max-height: 45vh;
-  }
-
-  [class*="controls"] {
-    flex-direction: row;
-    gap: var(--space-lg);
+  :root {
+    --touch-min: 48px;
+    --touch-large: 64px;
   }
 }
