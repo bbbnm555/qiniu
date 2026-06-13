@@ -1,3 +1,8 @@
+/* ===========================================
+   AppShell — 外壳布局
+   柔和顶栏 · 大字号 · 温暖品牌标识
+   =========================================== */
+
 .shell {
   position: relative;
   z-index: 1;
@@ -5,6 +10,8 @@
   display: flex;
   flex-direction: column;
 }
+
+/* --- 顶栏 --- */
 
 .header {
   display: flex;
@@ -18,24 +25,34 @@
   position: sticky;
   top: 0;
   z-index: 50;
+  min-height: 64px;
 }
+
+/* --- 品牌标识 --- */
 
 .brand {
   display: flex;
   align-items: center;
-  gap: var(--space-sm);
+  gap: var(--space-md);
   text-decoration: none;
   color: var(--color-fg);
+  border-radius: var(--radius-md);
+  padding: var(--space-xs);
+}
+
+.brand:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 3px;
 }
 
 .brandIcon {
-  font-size: 1.3rem;
-  filter: drop-shadow(0 0 6px var(--color-accent-glow));
+  font-size: 1.5rem;
+  color: var(--color-accent);
 }
 
 .brandText {
   font-size: var(--font-size-lg);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -43,24 +60,36 @@
   color: var(--color-accent);
 }
 
+/* --- 导航链接 --- */
+
 .navLink {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
   border-radius: var(--radius-md);
   color: var(--color-fg-secondary);
   text-decoration: none;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
   font-weight: 500;
   transition: all var(--transition-fast);
-  border: 1px solid transparent;
+  border: 2px solid transparent;
+  min-height: var(--touch-min);
+  white-space: nowrap;
 }
+
 .navLink:hover {
   color: var(--color-fg);
   background: var(--color-accent-dim);
-  border-color: var(--color-border-light);
+  border-color: var(--color-border);
 }
+
+.navLink:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 3px;
+}
+
+/* --- 主内容区 --- */
 
 .main {
   flex: 1;

@@ -1,29 +1,34 @@
+/* ===========================================
+   VoiceIndicator — 语音状态波形
+   大尺寸 · 清晰动画 · 温暖色彩
+   =========================================== */
+
 .container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
   border-radius: var(--radius-lg);
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  min-width: 200px;
+  background: var(--color-bg-elevated);
+  border: 2px solid var(--color-border);
+  min-width: 220px;
 }
+
+/* --- 波形条 --- */
 
 .waveform {
   display: flex;
   align-items: flex-end;
-  gap: 3px;
-  height: 44px;
-  padding: 0 4px;
+  gap: 4px;
+  height: 52px;
+  padding: 0 6px;
 }
 
 .bar {
-  width: 3px;
-  border-radius: 2px;
-  background: var(--color-accent);
+  width: 4px;
+  border-radius: 3px;
+  background: var(--color-fg-muted);
   height: 12px;
   animation: idleWave 1.8s ease-in-out infinite;
 }
@@ -33,19 +38,19 @@
   0%,
   100% {
     height: 10px;
-    opacity: 0.3;
+    opacity: 0.25;
   }
   50% {
-    height: 22px;
-    opacity: 0.7;
+    height: 24px;
+    opacity: 0.6;
   }
 }
 
-/* listening — 活跃跳动 */
+/* listening — 活跃跳动（红色脉动） */
 .bar.listening {
   background: var(--color-danger);
   animation: listenWave 0.55s ease-in-out infinite alternate;
-  box-shadow: 0 0 6px var(--color-danger-glow);
+  box-shadow: 0 0 8px rgba(184, 58, 58, 0.3);
 }
 
 @keyframes listenWave {
@@ -53,15 +58,15 @@
     height: 6px;
   }
   100% {
-    height: 44px;
+    height: 52px;
   }
 }
 
-/* processing — 思考中 */
+/* processing — AI 思考中（暖橙） */
 .bar.processing {
   background: var(--color-accent);
   animation: processWave 0.7s ease-in-out infinite alternate;
-  box-shadow: 0 0 6px var(--color-accent-glow);
+  box-shadow: 0 0 8px var(--color-accent-glow);
 }
 
 @keyframes processWave {
@@ -70,43 +75,63 @@
     opacity: 0.5;
   }
   100% {
-    height: 40px;
+    height: 44px;
     opacity: 1;
   }
 }
 
-/* speaking — 说话中 */
+/* speaking — AI 回答中（绿色） */
 .bar.speaking {
   background: var(--color-success);
   animation: speakWave 0.5s ease-in-out infinite alternate;
-  box-shadow: 0 0 6px var(--color-success-glow);
+  box-shadow: 0 0 8px rgba(45, 107, 79, 0.3);
 }
 
 @keyframes speakWave {
   0% {
-    height: 40px;
+    height: 44px;
   }
   100% {
     height: 8px;
   }
 }
 
+/* --- 文本标签 --- */
+
 .label {
   font-size: var(--font-size-sm);
   color: var(--color-fg-secondary);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
 .transcript {
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-md);
   color: var(--color-fg);
-  font-weight: 400;
-  max-width: 260px;
+  font-weight: 500;
+  max-width: 280px;
   text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  opacity: 0.8;
+}
+
+/* --- 减少动效 --- */
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+  }
+  .bar.listening {
+    height: 36px;
+    opacity: 1;
+  }
+  .bar.processing {
+    height: 30px;
+    opacity: 0.8;
+  }
+  .bar.speaking {
+    height: 20px;
+    opacity: 1;
+  }
 }
